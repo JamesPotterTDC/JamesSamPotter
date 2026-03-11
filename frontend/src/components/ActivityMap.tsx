@@ -113,7 +113,7 @@ export default function ActivityMap({ polyline }: ActivityMapProps) {
       map.current?.remove();
       map.current = null;
     };
-  }, [polyline, startLatlng]);
+  }, [polyline]);
 
   return <div ref={mapContainer} className="w-full h-full rounded-lg" />;
 }
