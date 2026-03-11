@@ -1,0 +1,138 @@
+================================================================================
+CYCLING DASHBOARD - VALIDATION COMMANDS
+================================================================================
+
+QUICK VALIDATION (No Strava credentials needed)
+--------------------------------------------------------------------------------
+cd /Users/jamespotterdc/jamessampotter.co.uk
+
+# Check everything is set up correctly
+./RUN_ME_FIRST.sh
+
+# Expected output:
+# ✅ Python syntax check
+# ✅ Docker Compose check
+# ✅ File structure check
+
+================================================================================
+
+PRIVACY TESTS (Requires Docker, no Strava credentials)
+--------------------------------------------------------------------------------
+# Start database
+docker-compose up -d db redis
+sleep 10
+
+# Run privacy tests
+docker-compose exec backend pytest strava_ingest/tests_privacy.py -v
+
+# Expected: 12 passed
+#   - test_encode_decode_round_trip
+#   - test_redact_removes_start_end
+#   - test_activity_list_no_location_data
+#   - test_activity_detail_no_precise_location
+#   - test_streams_no_latlng
+#   - + 7 more
+
+================================================================================
+
+FULL STACK TEST (Requires Strava credentials configured)
+--------------------------------------------------------------------------------
+# 1. Generate encryption key
+docker run --rm python:3.11-slim sh -c "pip install -q cryptography && python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+
+# 2. Edit backend/.env and set:
+#    STRAVA_CLIENT_ID=your_id
+#    STRAVA_CLIENT_SECRET=your_secret  
+#    ENCRYPTION_KEY=<output_from_step_1>
+
+# 3. Start all services
+docker-compose up -d
+
+# Wait for startup
+sleep 30
+
+# 4. Check backend health
+curl http://localhost:8000/api/health/
+
+# Expected: {"status":"healthy","checks":{"database":"ok","redis":"ok"}}
+
+# 5. Check frontend
+curl -I http://localhost:3000
+
+# Expected: HTTP/1.1 200 OK
+
+# 6. Test webhook speed
+time curl -X POST http://localhost:8000/api/strava/webhook/ \
+  -H "Content-Type: application/json" \
+  -d '{"object_type":"activity","aspect_type":"create","object_id":1,"owner_id":1,"event_time":1}'
+
+# Expected: <500ms, response: {"status":"EVENT_RECEIVED"}
+
+# 7. Run all tests
+docker-compose exec backend pytest -v
+
+# Expected: 27+ passed
+
+================================================================================
+
+PRIVACY VERIFICATION (After services running)
+--------------------------------------------------------------------------------
+# Check API never returns location data
+curl http://localhost:8000/api/summary/ | python3 -m json.tool > /tmp/api_test.json
+
+# Verify no location fields
+grep -E "start_latlng|end_latlng" /tmp/api_test.json
+
+# Expected: No output (fields not present)
+
+# Check frontend has privacy notice
+curl http://localhost:3000 | grep "redacted"
+
+# Expected: Found "Routes are automatically redacted"
+
+================================================================================
+
+VIEW LOGS
+--------------------------------------------------------------------------------
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f backend
+docker-compose logs -f celery_worker
+
+# Stop logs: Ctrl+C
+
+================================================================================
+
+STOP SERVICES
+--------------------------------------------------------------------------------
+docker-compose down
+
+# Remove volumes (full reset)
+docker-compose down -v
+
+================================================================================
+
+KEY FILES TO REVIEW
+================================================================================
+Privacy implementation:  backend/strava_ingest/privacy.py
+Privacy tests:          backend/strava_ingest/tests_privacy.py
+API serializers:        backend/api/serializers.py
+Ingestion logic:        backend/strava_ingest/ingest.py
+Frontend map:           frontend/src/components/ActivityMap.tsx
+Privacy notice:         frontend/src/components/Footer.tsx
+
+Configuration:          backend/.env (set your Strava credentials here)
+
+================================================================================
+
+QUICK START AFTER VALIDATION
+================================================================================
+1. Configure backend/.env (see GETTING_STARTED.md)
+2. Run: docker-compose up -d
+3. Visit: http://localhost:3000
+4. Click "Connect to Strava"
+5. Verify: Routes show middle only, privacy notice visible
+
+================================================================================

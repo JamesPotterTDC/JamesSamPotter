@@ -1,0 +1,109 @@
+================================================================================
+RAILWAY DEPLOYMENT - QUICK REFERENCE
+================================================================================
+
+GITHUB PUSH COMMANDS
+--------------------------------------------------------------------------------
+cd /Users/jamespotterdc/jamessampotter.co.uk
+./GIT_COMMANDS.sh
+
+# Or manually:
+git init
+git add .
+git commit -m "Initial commit: Cycling Dashboard MVP"
+gh repo create JamesSamPotter --public --source=. --remote=origin --push
+
+================================================================================
+
+RAILWAY SERVICE COMMANDS
+--------------------------------------------------------------------------------
+
+Service: backend-web
+  Root Directory: backend
+  Start Command:
+    python manage.py migrate && python manage.py collectstatic --noinput && gunicorn cycling_dashboard.wsgi:application --bind 0.0.0.0:$PORT --workers 4
+
+Service: backend-worker
+  Root Directory: backend
+  Start Command:
+    celery -A cycling_dashboard worker --loglevel=info --concurrency=2
+
+Service: backend-beat
+  Root Directory: backend
+  Start Command:
+    celery -A cycling_dashboard beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+Service: frontend (optional, or use Vercel)
+  Root Directory: frontend
+  Build Command: npm ci && npm run build
+  Start Command: npm start
+
+================================================================================
+
+REQUIRED ENV VARS (All Backend Services)
+--------------------------------------------------------------------------------
+
+Generate these first:
+  python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+  python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  openssl rand -hex 32
+  openssl rand -hex 32
+
+Then set in Railway:
+  DJANGO_SECRET_KEY=<generated-50-chars>
+  ENCRYPTION_KEY=<generated-fernet-key>
+  STRAVA_CLIENT_ID=<from-strava-api>
+  STRAVA_CLIENT_SECRET=<from-strava-api>
+  STRAVA_WEBHOOK_VERIFY_TOKEN=<generated-hex>
+  ADMIN_API_TOKEN=<generated-hex>
+  ALLOWED_HOSTS=your-backend.railway.app
+  FRONTEND_URL=https://your-frontend.vercel.app
+  CORS_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+  CSRF_TRUSTED_ORIGINS=https://your-frontend.vercel.app
+  DEBUG=False
+  MAP_REDACT_PERCENT=10
+  STRAVA_FETCH_STREAMS=False
+
+Auto-provided by Railway:
+  DATABASE_URL (from Postgres plugin)
+  REDIS_URL (from Redis plugin)
+  PORT (dynamic)
+
+================================================================================
+
+FRONTEND ENV VAR (Vercel or Railway)
+--------------------------------------------------------------------------------
+  NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api
+
+================================================================================
+
+POST-DEPLOY CHECKLIST
+--------------------------------------------------------------------------------
+1. Check health:
+   curl https://your-backend.railway.app/api/health/
+
+2. Update Strava settings:
+   https://www.strava.com/settings/api
+   - Authorization Callback Domain: your-frontend-domain
+   - (Webhook set up in next step)
+
+3. Subscribe to webhooks:
+   railway run -s backend-web python manage.py strava_webhook_subscribe \
+     --callback-url https://your-backend.railway.app/api/strava/webhook \
+     --verify-token <your_webhook_token>
+
+4. Visit frontend and connect to Strava
+
+5. Verify privacy:
+   curl https://your-backend.railway.app/api/activities/ | grep "start_latlng"
+   (Should return nothing)
+
+================================================================================
+
+FULL DOCS
+--------------------------------------------------------------------------------
+Complete guide:     DEPLOY_RAILWAY.md
+Environment vars:   RAILWAY_ENV_VARS.txt
+Quick summary:      DEPLOY_SUMMARY.md (if exists)
+
+================================================================================

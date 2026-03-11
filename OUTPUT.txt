@@ -1,0 +1,211 @@
+================================================================================
+RAILWAY DEPLOYMENT - READY TO PUSH
+================================================================================
+
+FILES CHANGED
+================================================================================
+
+Backend (8 files modified/created):
+  ✅ requirements.txt           - Added whitenoise, dj-database-url
+  ✅ settings.py                - WhiteNoise, DATABASE_URL, CSRF_TRUSTED_ORIGINS
+  ✅ .env.example               - Railway env var comments
+  ✅ nixpacks.toml              - NEW (Railway build config)
+  ✅ Procfile                   - NEW (service commands reference)
+
+Frontend (2 files modified):
+  ✅ package.json               - Start uses PORT env var
+  ✅ .env.example               - Production API URL comment
+
+Repository (2 files modified):
+  ✅ .gitignore                 - Added .env.production
+  ✅ README.md                  - Added deployment section
+
+Documentation (4 files created):
+  ✅ DEPLOY_RAILWAY.md          - Complete deployment guide
+  ✅ RAILWAY_ENV_VARS.txt       - Environment variables checklist
+  ✅ RAILWAY_DEPLOY_QUICK.txt   - Quick reference
+  ✅ GIT_COMMANDS.sh            - Git automation script
+
+Total: 16 files (4 new, 12 modified)
+
+================================================================================
+RAILWAY SERVICE COMMANDS (Copy to Railway Dashboard)
+================================================================================
+
+Service 1: backend-web
+  Root Directory: backend
+  Start Command:
+python manage.py migrate && python manage.py collectstatic --noinput && gunicorn cycling_dashboard.wsgi:application --bind 0.0.0.0:$PORT --workers 4
+
+Service 2: backend-worker  
+  Root Directory: backend
+  Start Command:
+celery -A cycling_dashboard worker --loglevel=info --concurrency=2
+
+Service 3: backend-beat
+  Root Directory: backend
+  Start Command:
+celery -A cycling_dashboard beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+Service 4: frontend (optional, or use Vercel)
+  Root Directory: frontend
+  Build Command: npm ci && npm run build
+  Start Command: npm start
+
+================================================================================
+ENV VARS CHECKLIST (Set in Railway for All Backend Services)
+================================================================================
+
+Generate these first:
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+openssl rand -hex 32
+openssl rand -hex 32
+
+Then set:
+  DJANGO_SECRET_KEY=<generated-50-chars>
+  ENCRYPTION_KEY=<generated-fernet-key>
+  ADMIN_API_TOKEN=<generated-hex>
+  STRAVA_WEBHOOK_VERIFY_TOKEN=<generated-hex>
+  STRAVA_CLIENT_ID=<from-strava-api-settings>
+  STRAVA_CLIENT_SECRET=<from-strava-api-settings>
+  ALLOWED_HOSTS=your-backend.railway.app
+  FRONTEND_URL=https://your-frontend.vercel.app
+  CORS_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+  CSRF_TRUSTED_ORIGINS=https://your-frontend.vercel.app
+  DEBUG=False
+  MAP_REDACT_PERCENT=10
+  STRAVA_FETCH_STREAMS=False
+
+Auto-provided by Railway (don't set):
+  DATABASE_URL, REDIS_URL, PORT
+
+Frontend env var (Vercel):
+  NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api
+
+================================================================================
+EXACT GITHUB COMMANDS TO RUN
+================================================================================
+
+cd /Users/jamespotterdc/jamessampotter.co.uk
+
+# Option 1: Automated (uses gh CLI)
+./GIT_COMMANDS.sh
+
+# Option 2: Manual (if gh not installed)
+git init
+git add .
+git commit -m "Initial commit: Cycling Dashboard MVP with privacy protections"
+
+# Then create repo at https://github.com/new (name: JamesSamPotter, public)
+# Then:
+git remote add origin git@github.com:YOUR_USERNAME/JamesSamPotter.git
+git branch -M main  
+git push -u origin main
+
+# Or with HTTPS:
+git remote add origin https://github.com/YOUR_USERNAME/JamesSamPotter.git
+git branch -M main
+git push -u origin main
+
+================================================================================
+RAILWAY DEPLOYMENT STEPS
+================================================================================
+
+1. Push to GitHub (command above)
+
+2. Go to Railway: https://railway.app/new
+   - Import JamesSamPotter repo
+
+3. Add plugins:
+   - New → Database → PostgreSQL
+   - New → Database → Redis
+
+4. Create backend-web service:
+   - New → GitHub Repo → JamesSamPotter
+   - Root directory: backend
+   - Start command: (see "Service Commands" above)
+   - Add env vars (see "Env Vars Checklist" above)
+   - Generate domain
+
+5. Create backend-worker service:
+   - New → GitHub Repo → JamesSamPotter
+   - Root directory: backend
+   - Start command: (see "Service Commands" above)
+   - Add same env vars
+
+6. Create backend-beat service:
+   - New → GitHub Repo → JamesSamPotter
+   - Root directory: backend
+   - Start command: (see "Service Commands" above)
+   - Add same env vars
+
+7. Deploy frontend to Vercel:
+   - Import JamesSamPotter repo
+   - Root directory: frontend
+   - Add env var: NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api
+
+8. Update Strava app:
+   - https://www.strava.com/settings/api
+   - Authorization Callback Domain: your-frontend-domain
+
+9. Subscribe to webhooks:
+   railway run -s backend-web python manage.py strava_webhook_subscribe \
+     --callback-url https://your-backend.railway.app/api/strava/webhook \
+     --verify-token <your_token>
+
+10. Test:
+    curl https://your-backend.railway.app/api/health/
+
+================================================================================
+WHAT'S PRODUCTION-READY
+================================================================================
+
+✅ WhiteNoise             - Static files served in production
+✅ Gunicorn               - Production WSGI server (4 workers)
+✅ DATABASE_URL parsing   - Railway Postgres auto-config
+✅ REDIS_URL support      - Railway Redis auto-config
+✅ Migrations on deploy   - Runs automatically in start command
+✅ Static collection      - Runs automatically in start command
+✅ CORS configured        - Via env vars
+✅ CSRF configured        - Via env vars  
+✅ Health checks          - /api/health/ and /api/ready/
+✅ Privacy protected      - Routes redacted, no location leaks
+✅ Error handling         - Comprehensive logging
+✅ Rate limiting          - 429 handled, waits proactively
+✅ Secrets secure         - All in env vars, nothing committed
+
+================================================================================
+QUICK VALIDATION
+================================================================================
+
+# Before pushing to GitHub
+cd /Users/jamespotterdc/jamessampotter.co.uk
+python3 -m py_compile backend/cycling_dashboard/settings.py
+./verify.sh
+
+# After Railway deploy
+curl https://your-backend.railway.app/api/health/
+curl https://your-backend.railway.app/api/activities/ | grep "start_latlng"
+# (Should return nothing - locations protected)
+
+================================================================================
+DOCUMENTATION
+================================================================================
+
+Full deployment guide:      DEPLOY_RAILWAY.md (349 lines)
+Environment variables:      RAILWAY_ENV_VARS.txt
+Quick reference:           RAILWAY_DEPLOY_QUICK.txt
+Privacy details:           PRIVACY_CHANGES.md
+Privacy quick ref:         PRIVACY_QUICK_REF.md
+
+================================================================================
+NEXT ACTIONS
+================================================================================
+
+1. Run: ./GIT_COMMANDS.sh
+2. Go to: https://railway.app/new
+3. Follow: DEPLOY_RAILWAY.md steps 1-10
+4. Done!
+
+================================================================================
