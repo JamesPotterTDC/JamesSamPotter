@@ -127,8 +127,8 @@ class Activity(models.Model):
         db_table = 'activity'
         ordering = ['-start_date']
         indexes = [
-            models.Index(fields=['athlete', '-start_date']),
-            models.Index(fields=['type', '-start_date']),
+            models.Index(fields=['athlete', '-start_date'], name='activity_athlete_start_idx'),
+            models.Index(fields=['type', '-start_date'], name='activity_type_start_idx'),
         ]
 
     def __str__(self):
