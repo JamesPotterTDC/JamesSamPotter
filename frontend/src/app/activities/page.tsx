@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { fetchActivities } from '@/lib/api';
-import { formatDistance, formatDuration, formatDateTime, formatElevation } from '@/lib/utils';
+import { formatDistance, formatDuration, formatDateTime, formatElevation, formatEnergy } from '@/lib/utils';
 import Link from 'next/link';
 
 interface SearchParams {
