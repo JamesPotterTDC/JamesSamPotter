@@ -1,0 +1,89 @@
+================================================================================
+RAILWAY BUILD FAILED? - QUICK FIX
+================================================================================
+
+ERROR: "Nixpacks was unable to generate a build plan"
+
+CAUSE: Railway is trying to build from the ROOT directory, but this is a 
+       MONOREPO with separate backend/ and frontend/ directories.
+
+FIX: Set the "Root Directory" for each service!
+
+================================================================================
+
+STEP-BY-STEP FIX
+================================================================================
+
+For EACH failed service in Railway:
+
+1. Click on the service card in Railway dashboard
+
+2. Click "Settings" tab (left sidebar)
+
+3. Scroll to "Root Directory" field
+
+4. Enter ONE OF:
+   - backend   (for backend-web, backend-worker, backend-beat)
+   - frontend  (for frontend service)
+
+5. Click outside the field to save
+
+6. Go to "Deployments" tab
+
+7. Click "Deploy" or trigger a new deployment
+
+================================================================================
+
+SERVICES YOU NEED TO CREATE
+================================================================================
+
+Service 1: backend-web
+  Root Directory: backend
+  Start Command: python manage.py migrate && python manage.py collectstatic --noinput && gunicorn cycling_dashboard.wsgi:application --bind 0.0.0.0:$PORT --workers 4
+
+Service 2: backend-worker
+  Root Directory: backend
+  Start Command: celery -A cycling_dashboard worker --loglevel=info --concurrency=2
+
+Service 3: backend-beat
+  Root Directory: backend
+  Start Command: celery -A cycling_dashboard beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+Service 4: frontend (optional, use Vercel instead if easier)
+  Root Directory: frontend
+  Start Command: npm start
+
+================================================================================
+
+BEFORE CREATING SERVICES
+================================================================================
+
+1. Add PostgreSQL plugin:
+   - Railway Dashboard → New → Database → PostgreSQL
+
+2. Add Redis plugin:
+   - Railway Dashboard → New → Database → Redis
+
+3. THEN create the 3-4 services above
+
+================================================================================
+
+IMPORTANT: ROOT DIRECTORY MUST BE SET!
+================================================================================
+
+Railway CANNOT auto-detect monorepos. You MUST manually set:
+
+  Root Directory = backend  (for all backend services)
+  Root Directory = frontend (for frontend service)
+
+Without this, Railway will try to build from the root and fail!
+
+================================================================================
+
+FULL GUIDE
+================================================================================
+
+See: RAILWAY_SETUP_FIX.md (step-by-step with screenshots described)
+See: DEPLOY_RAILWAY.md (complete deployment guide)
+
+================================================================================

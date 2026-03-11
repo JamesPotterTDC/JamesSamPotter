@@ -43,19 +43,24 @@ Railway deployment uses:
 ## Step 3: Create Backend Web Service
 
 1. Click "New" → "GitHub Repo" → select `JamesSamPotter`
-2. Configure service:
-   - **Service Name**: `backend-web`
-   - **Root Directory**: `backend`
-   - **Build Command**: (leave empty, uses default)
-   - **Start Command**: 
+2. **CRITICAL**: Set Root Directory
+   - After selecting the repo, Railway may try to build immediately
+   - Click on the service card
+   - Go to "Settings" tab
+   - Find "Root Directory" field
+   - Enter: `backend`
+   - Save and trigger redeploy if needed
+
+3. Configure service:
+   - **Service Name**: `backend-web` (optional, Railway auto-names)
+   - **Start Command** (optional, already in railway.toml): 
      ```
      python manage.py migrate && python manage.py collectstatic --noinput && gunicorn cycling_dashboard.wsgi:application --bind 0.0.0.0:$PORT --workers 4
      ```
-   - **Watch Paths**: `backend/**`
 
-3. Add environment variables (see "Environment Variables" section below)
+4. Add environment variables (see "Environment Variables" section below)
 
-4. Generate domain:
+5. Generate domain:
    - Go to service Settings → Networking
    - Click "Generate Domain"
    - Copy the URL (e.g., `backend-web-production.up.railway.app`)
@@ -65,34 +70,36 @@ Railway deployment uses:
 ## Step 4: Create Celery Worker Service
 
 1. Click "New" → "GitHub Repo" → select `JamesSamPotter`
-2. Configure service:
-   - **Service Name**: `backend-worker`
-   - **Root Directory**: `backend`
-   - **Build Command**: (leave empty)
+2. **CRITICAL**: Set Root Directory
+   - Click on the new service card
+   - Go to "Settings" tab
+   - Set "Root Directory" to: `backend`
+
+3. Configure service:
    - **Start Command**:
      ```
      celery -A cycling_dashboard worker --loglevel=info --concurrency=2
      ```
-   - **Watch Paths**: `backend/**`
 
-3. Add same environment variables as backend-web (Railway can share variables)
+4. Add same environment variables as backend-web (Railway can share variables)
 
 ---
 
 ## Step 5: Create Celery Beat Service (Recommended)
 
 1. Click "New" → "GitHub Repo" → select `JamesSamPotter`
-2. Configure service:
-   - **Service Name**: `backend-beat`
-   - **Root Directory**: `backend`
-   - **Build Command**: (leave empty)
+2. **CRITICAL**: Set Root Directory
+   - Click on the new service card
+   - Go to "Settings" tab
+   - Set "Root Directory" to: `backend`
+
+3. Configure service:
    - **Start Command**:
      ```
      celery -A cycling_dashboard beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
      ```
-   - **Watch Paths**: `backend/**`
 
-3. Add same environment variables
+4. Add same environment variables
 
 ---
 
@@ -106,12 +113,10 @@ Railway deployment uses:
 **Option B: Deploy on Railway**
 
 1. Click "New" → "GitHub Repo" → select `JamesSamPotter`
-2. Configure service:
-   - **Service Name**: `frontend`
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm ci && npm run build`
-   - **Start Command**: `npm start`
-   - **Watch Paths**: `frontend/**`
+2. **CRITICAL**: Set Root Directory
+   - Click on the new service card
+   - Go to "Settings" tab
+   - Set "Root Directory" to: `frontend`
 
 3. Add environment variable:
    ```
@@ -119,6 +124,8 @@ Railway deployment uses:
    ```
 
 4. Generate domain for frontend
+
+Note: Build and start commands are in `frontend/railway.toml`, Railway will auto-detect them.
 
 ---
 
