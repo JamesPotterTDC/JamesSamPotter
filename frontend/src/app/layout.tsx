@@ -24,7 +24,14 @@ const bebasNeue = Bebas_Neue({
 export const metadata: Metadata = {
   title: "James Potter — Cyclist",
   description: "Personal cycling performance dashboard. Every ride, every watt, every kilometre.",
-  themeColor: "#07090f",
+  icons: {
+    icon: '/favicon.svg',
+  },
+  openGraph: {
+    title: 'James Potter — Cyclist',
+    description: 'Personal cycling performance dashboard. Every ride, every watt, every kilometre.',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
