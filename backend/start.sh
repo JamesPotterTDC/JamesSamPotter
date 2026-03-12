@@ -1,4 +1,5 @@
 #!/bin/bash
+# Updated: 2026-03-12 11:35
 set -e
 
 SERVICE_TYPE=${SERVICE_TYPE:-web}
