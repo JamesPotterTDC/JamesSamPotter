@@ -1,26 +1,38 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export default function AuthCallbackPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const success = searchParams.get('success');
+    const code = searchParams.get('code');
     const error = searchParams.get('error');
+    const success = searchParams.get('success');
 
     if (success) {
-      setTimeout(() => {
-        router.push('/?connected=true');
-      }, 2000);
-    } else if (error) {
-      setTimeout(() => {
-        router.push(`/?error=${error}`);
-      }, 2000);
+      // Already processed by backend, redirect to dashboard
+      window.location.href = '/?connected=true';
+      return;
     }
-  }, [searchParams, router]);
+
+    if (error) {
+      // OAuth error from backend
+      window.location.href = `/?error=${error}`;
+      return;
+    }
+
+    if (code) {
+      // Got authorization code from Strava, send to backend
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+      window.location.href = `${apiUrl}/strava/oauth/callback/?code=${code}&scope=${searchParams.get('scope') || ''}`;
+      return;
+    }
+
+    // No code, no success, no error - something went wrong
+    window.location.href = '/?error=no_code';
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
