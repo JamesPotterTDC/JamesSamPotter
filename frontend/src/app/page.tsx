@@ -4,6 +4,7 @@ import LatestRideCard from '@/components/LatestRideCard';
 import WeeklyChart from '@/components/WeeklyChart';
 import GuinnessCard from '@/components/GuinnessCard';
 import ProgressRing from '@/components/ProgressRing';
+import YearHeatmap from '@/components/YearHeatmap';
 import FadeIn from '@/components/FadeIn';
 import Link from 'next/link';
 import {
@@ -26,13 +27,15 @@ import {
 export const revalidate = 0;
 
 export default async function HomePage() {
-  let summary, activities, weeklyTrends, latestDetail;
+  let summary, activities, weeklyTrends, latestDetail, yearActivities;
+  const currentYear = new Date().getFullYear();
 
   try {
-    [summary, activities, weeklyTrends] = await Promise.all([
+    [summary, activities, weeklyTrends, yearActivities] = await Promise.all([
       fetchSummary(),
       fetchActivities({ page: 1 }),
       fetchWeeklyTrends(16),
+      fetchActivities({ year: currentYear, page_size: 200 }),
     ]);
 
     // Fetch route detail for latest outdoor ride
@@ -99,6 +102,15 @@ export default async function HomePage() {
         <FadeIn delay={0.1}>
           <section className="max-w-7xl mx-auto px-6 pb-16">
             <WeeklyChart data={weeklyTrends} />
+          </section>
+        </FadeIn>
+      )}
+
+      {/* YEAR HEATMAP */}
+      {yearActivities && yearActivities.results.length > 0 && (
+        <FadeIn delay={0.1}>
+          <section className="max-w-7xl mx-auto px-6 pb-16 relative">
+            <YearHeatmap activities={yearActivities.results} year={currentYear} />
           </section>
         </FadeIn>
       )}

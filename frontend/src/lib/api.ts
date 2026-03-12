@@ -94,11 +94,15 @@ export async function fetchActivities(params?: {
   page?: number;
   type?: string;
   trainer?: boolean;
+  year?: number;
+  page_size?: number;
 }): Promise<{ results: Activity[]; count: number; next: string | null; previous: string | null }> {
   const query = new URLSearchParams();
   if (params?.page) query.set('page', params.page.toString());
   if (params?.type) query.set('type', params.type);
   if (params?.trainer !== undefined) query.set('trainer', params.trainer.toString());
+  if (params?.year) query.set('year', params.year.toString());
+  if (params?.page_size) query.set('page_size', params.page_size.toString());
   
   const res = await fetch(`${API_URL}/activities/?${query}`, { 
     cache: 'no-store',
