@@ -142,23 +142,31 @@ export default function HeroSection({ summary }: HeroSectionProps) {
             { label: 'kilometres', value: totalKm, decimals: 1, duration: 2500, accent: 'orange' as const },
             { label: 'rides', value: ytd.total_rides, decimals: 0, duration: 1800, accent: 'orange' as const },
             { label: 'metres climbed', value: ytd.total_elevation_m, decimals: 0, duration: 2200, accent: 'cyan' as const },
-            { label: 'in the saddle', value: totalHours, decimals: 0, duration: 2000, accent: 'cyan' as const, suffix: `h${String(totalMins).padStart(2, '0')}m` },
+            { label: 'in the saddle', value: totalHours, decimals: 0, duration: 2000, accent: 'cyan' as const },
           ].map((stat, i) => (
             <motion.div key={stat.label} variants={stagger(i)} initial="hidden" animate="visible">
               <div
-                className="font-bebas text-[clamp(64px,10vw,120px)] text-white leading-[0.88] tracking-tight select-none whitespace-nowrap"
+                className="font-bebas text-[clamp(64px,10vw,120px)] text-white leading-[0.88] tracking-tight select-none flex items-baseline whitespace-nowrap"
                 style={{
                   textShadow: stat.accent === 'orange'
                     ? '0 0 120px rgba(251,146,60,0.14)'
                     : '0 0 120px rgba(34,211,238,0.09)',
                 }}
               >
-                <AnimatedCounter
-                  value={stat.value}
-                  decimals={stat.decimals}
-                  duration={stat.duration}
-                  suffix={stat.suffix}
-                />
+                {stat.label === 'in the saddle' ? (
+                  <>
+                    <AnimatedCounter value={stat.value} decimals={0} duration={stat.duration} suffix="h" />
+                    <span className="text-[clamp(28px,4vw,52px)] text-white/80">
+                      {String(totalMins).padStart(2, '0')}m
+                    </span>
+                  </>
+                ) : (
+                  <AnimatedCounter
+                    value={stat.value}
+                    decimals={stat.decimals}
+                    duration={stat.duration}
+                  />
+                )}
               </div>
               <div className="mt-3 flex items-center gap-2.5">
                 <span
