@@ -18,7 +18,7 @@ def start_oauth(request):
     client = StravaClient()
     auth_url = client.get_authorize_url(redirect_uri=redirect_uri)
     
-    return JsonResponse({'auth_url': auth_url})
+    return redirect(auth_url)
 
 
 def oauth_callback(request):
