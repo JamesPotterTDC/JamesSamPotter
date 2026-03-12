@@ -16,7 +16,6 @@ interface WeeklyChartProps {
 
 const W = 640;
 const H = 140;
-const PAD_L = 0;
 const PAD_B = 20;
 const CHART_H = H - PAD_B;
 
@@ -31,6 +30,10 @@ function smooth(pts: [number, number][]): string {
     d.push(`C ${cpx.toFixed(1)} ${prev[1].toFixed(1)} ${cpx.toFixed(1)} ${curr[1].toFixed(1)} ${curr[0].toFixed(1)} ${curr[1].toFixed(1)}`);
   }
   return d.join(' ');
+}
+
+function area(pts: [number, number][], firstX: number, lastX: number): string {
+  return smooth(pts) + ` L ${lastX.toFixed(1)} ${CHART_H} L ${firstX.toFixed(1)} ${CHART_H} Z`;
 }
 
 export default function WeeklyChart({ data }: WeeklyChartProps) {
@@ -51,15 +54,14 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
   const colW = W / N;
 
   const toY = (v: number) => CHART_H - (v / maxVal) * CHART_H;
-  const toX = (i: number) => PAD_L + i * colW + colW / 2;
+  const toX = (i: number) => i * colW + colW / 2;
 
-  // Points for total line
   const totalPts: [number, number][] = weeks.map((w, i) => [toX(i), toY(w.total)]);
   const outdoorPts: [number, number][] = weeks.map((w, i) => [toX(i), toY(w.outdoor)]);
+  const indoorPts: [number, number][] = weeks.map((w, i) => [toX(i), toY(w.indoor)]);
 
-  // Area path (closed)
-  const totalArea = smooth(totalPts) + ` L ${toX(N - 1).toFixed(1)} ${CHART_H} L ${toX(0).toFixed(1)} ${CHART_H} Z`;
-  const outdoorArea = smooth(outdoorPts) + ` L ${toX(N - 1).toFixed(1)} ${CHART_H} L ${toX(0).toFixed(1)} ${CHART_H} Z`;
+  const hasIndoor = weeks.some((w) => w.indoor > 0);
+  const hasOutdoor = weeks.some((w) => w.outdoor > 0);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
@@ -84,12 +86,16 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-xs text-slate-600">
-            <span className="w-2 h-2 rounded-full bg-orange-400/70" /> Outdoor
-          </span>
-          <span className="flex items-center gap-1.5 text-xs text-slate-600">
-            <span className="w-2 h-2 rounded-full bg-cyan-400/70" /> Indoor
-          </span>
+          {hasOutdoor && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-600">
+              <span className="w-2 h-2 rounded-full bg-orange-400/70" /> Outdoor
+            </span>
+          )}
+          {hasIndoor && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-600">
+              <span className="w-2 h-2 rounded-full bg-cyan-400/70" /> Indoor
+            </span>
+          )}
         </div>
       </div>
 
@@ -103,34 +109,31 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
           onMouseLeave={() => setCursor(null)}
         >
           <defs>
-            <linearGradient id="rc-total-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#fb923c" stopOpacity="0.22" />
-              <stop offset="75%" stopColor="#fb923c" stopOpacity="0.04" />
-              <stop offset="100%" stopColor="#fb923c" stopOpacity="0" />
-            </linearGradient>
             <linearGradient id="rc-outdoor-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#fb923c" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#fb923c" stopOpacity="0.08" />
+              <stop offset="0%" stopColor="#fb923c" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#fb923c" stopOpacity="0.04" />
             </linearGradient>
             <linearGradient id="rc-indoor-fill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.28" />
-              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.04" />
             </linearGradient>
-            <filter id="rc-glow">
+            <filter id="rc-glow-orange">
               <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="rc-glow-cyan">
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
             <clipPath id="rc-reveal">
               <rect
                 x="0" y="0" width={inView ? W : 0} height={H}
-                style={{
-                  transition: 'width 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s',
-                }}
+                style={{ transition: 'width 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s' }}
               />
             </clipPath>
           </defs>
 
-          {/* Subtle grid */}
+          {/* Grid */}
           {[0.5, 1].map((f) => (
             <line key={f} x1={0} y1={toY(maxVal * f)} x2={W} y2={toY(maxVal * f)}
               stroke="rgba(255,255,255,0.04)" strokeWidth={1} />
@@ -138,44 +141,56 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
           <line x1={0} y1={CHART_H} x2={W} y2={CHART_H} stroke="rgba(255,255,255,0.07)" strokeWidth={1} />
 
           <g clipPath="url(#rc-reveal)">
-            {/* Filled areas */}
-            <path d={totalArea} fill="url(#rc-total-fill)" />
+            {/* Outdoor area + line */}
+            {hasOutdoor && (
+              <>
+                <path d={area(outdoorPts, toX(0), toX(N - 1))} fill="url(#rc-outdoor-fill)" />
+                <path d={smooth(outdoorPts)} fill="none" stroke="rgba(251,146,60,0.45)" strokeWidth={1.5}
+                  strokeLinecap="round" strokeLinejoin="round" />
+                <path d={smooth(outdoorPts)} fill="none" stroke="#fb923c" strokeWidth={1.5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                  filter="url(#rc-glow-orange)" opacity="0.65" />
+              </>
+            )}
 
-            {/* Outdoor area (more saturated) */}
-            <path d={outdoorArea} fill="url(#rc-outdoor-fill)" opacity="0.8" />
+            {/* Indoor area + line */}
+            {hasIndoor && (
+              <>
+                <path d={area(indoorPts, toX(0), toX(N - 1))} fill="url(#rc-indoor-fill)" />
+                <path d={smooth(indoorPts)} fill="none" stroke="rgba(34,211,238,0.45)" strokeWidth={1.5}
+                  strokeLinecap="round" strokeLinejoin="round" />
+                <path d={smooth(indoorPts)} fill="none" stroke="#22d3ee" strokeWidth={1.5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                  filter="url(#rc-glow-cyan)" opacity="0.65" />
+              </>
+            )}
 
-            {/* Total line — glowing */}
-            <path d={smooth(totalPts)} fill="none" stroke="rgba(251,146,60,0.5)" strokeWidth={1.5}
-              strokeLinecap="round" strokeLinejoin="round" />
-            <path d={smooth(totalPts)} fill="none" stroke="#fb923c" strokeWidth={1.5}
-              strokeLinecap="round" strokeLinejoin="round" filter="url(#rc-glow)" opacity="0.6" />
-
-            {/* Data points */}
-            {totalPts.map(([x, y], i) => weeks[i].total > 0 && (
-              <circle key={i} cx={x.toFixed(1)} cy={y.toFixed(1)} r={cursor?.i === i ? 4 : 2.5}
+            {/* Outdoor data points */}
+            {hasOutdoor && outdoorPts.map(([x, y], i) => weeks[i].outdoor > 0 && (
+              <circle key={`o-${i}`} cx={x.toFixed(1)} cy={y.toFixed(1)}
+                r={cursor?.i === i ? 4 : 2.5}
                 fill={cursor?.i === i ? '#fb923c' : 'rgba(251,146,60,0.5)'}
+                style={{ transition: 'r 0.15s, fill 0.15s' }}
+              />
+            ))}
+
+            {/* Indoor data points */}
+            {hasIndoor && indoorPts.map(([x, y], i) => weeks[i].indoor > 0 && (
+              <circle key={`n-${i}`} cx={x.toFixed(1)} cy={y.toFixed(1)}
+                r={cursor?.i === i ? 4 : 2.5}
+                fill={cursor?.i === i ? '#22d3ee' : 'rgba(34,211,238,0.5)'}
                 style={{ transition: 'r 0.15s, fill 0.15s' }}
               />
             ))}
           </g>
 
-          {/* Cursor — vertical scan line */}
+          {/* Cursor scan line */}
           {cursor && (
-            <g>
-              <line
-                x1={cursor.x} y1={0} x2={cursor.x} y2={CHART_H}
-                stroke="rgba(255,255,255,0.1)" strokeWidth={1}
-                strokeDasharray="3 3"
-              />
-              {weeks[cursor.i].outdoor > 0 && (
-                <circle cx={cursor.x.toFixed(1)} cy={toY(weeks[cursor.i].outdoor).toFixed(1)} r={3}
-                  fill="#fb923c" />
-              )}
-              {weeks[cursor.i].indoor > 0 && (
-                <circle cx={cursor.x.toFixed(1)} cy={toY(weeks[cursor.i].indoor).toFixed(1)} r={3}
-                  fill="#22d3ee" />
-              )}
-            </g>
+            <line
+              x1={cursor.x} y1={0} x2={cursor.x} y2={CHART_H}
+              stroke="rgba(255,255,255,0.1)" strokeWidth={1}
+              strokeDasharray="3 3"
+            />
           )}
 
           {/* Week labels (every 4th) */}
@@ -198,7 +213,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
               bottom: '100%',
               transform: 'translateX(-50%)',
               marginBottom: 8,
-              minWidth: 130,
+              minWidth: 140,
             }}
           >
             <p className="text-slate-500 mb-1.5 tracking-wider uppercase">{active.label}</p>
