@@ -25,7 +25,8 @@ export const metadata: Metadata = {
   title: "James Potter — Cyclist",
   description: "Personal cycling performance dashboard. Every ride, every watt, every kilometre.",
   icons: {
-    icon: '/favicon.svg',
+    icon: '/logo.jpg',
+    apple: '/logo.jpg',
   },
   openGraph: {
     title: 'James Potter — Cyclist',
