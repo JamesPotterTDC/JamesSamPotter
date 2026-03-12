@@ -53,9 +53,10 @@ def oauth_callback(request):
             datetime.fromtimestamp(token_data['expires_at'])
         )
         
-        oauth_token, token_created = StravaOAuthToken.objects.get_or_create(
-            athlete=athlete
-        )
+        try:
+            oauth_token = StravaOAuthToken.objects.get(athlete=athlete)
+        except StravaOAuthToken.DoesNotExist:
+            oauth_token = StravaOAuthToken(athlete=athlete)
         oauth_token.set_access_token(token_data['access_token'])
         oauth_token.set_refresh_token(token_data['refresh_token'])
         oauth_token.expires_at = expires_at
