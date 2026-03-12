@@ -1,229 +1,350 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 
-const SPECS = [
-  { label: 'Frame', value: 'Giant TCR Advanced Pro 2', detail: '2018 · carbon composite' },
-  { label: 'Groupset', value: 'Shimano 105', detail: 'R7000 · 11-speed' },
-  { label: 'Wheels', value: 'Zipp 404', detail: '58mm carbon clincher' },
-];
+// ─── Static bike config ────────────────────────────────────────────────────
+const BIKE = {
+  year:     2018,
+  make:     'Giant',
+  model:    'TCR Advanced Pro 2',
+  groupset: 'Shimano 105',
+  wheels:   'Zipp 404 Tubular',
+  frame:    'Carbon',
+  role:     'Road · Race',
+};
 
-// Geometry constants — side view of a compact road bike (TCR proportions)
-const RW = 62;  // wheel radius
-const RX = 128; // rear wheel centre x
-const FX = 388; // front wheel centre x
-const AY = 162; // axle Y (wheel centres)
-const BBX = 252; // bottom bracket x
-const BBY = 174; // bottom bracket y (BB drop below axle)
+interface BikeCardProps {
+  allTimeDistM: number;
+  allTimeRides: number;
+  lastRideDate?: string;
+}
 
-// Frame junctions
-const ST_TOP_X = 235; const ST_TOP_Y = 80;  // top of seat tube
-const HT_TOP_X = 376; const HT_TOP_Y = 94;  // top of head tube
-const HT_BOT_X = 383; const HT_BOT_Y = 116; // bottom of head tube
-
-const O = 'rgba(251,146,60,'; // orange helper
-
-export default function BikeCard() {
-  const [hovered, setHovered] = useState<number | null>(null);
+// ─── Zipp 404 deep-section wheel SVG ──────────────────────────────────────
+function ZippWheel({ size = 140, spin = true, alpha = 1 }: {
+  size?: number; spin?: boolean; alpha?: number;
+}) {
+  const CX = size / 2;
+  const CY = size / 2;
+  const outerR   = size / 2 - 4;
+  const deepR    = outerR - 9;
+  const spokeBed = deepR - 4;
+  const hubR     = Math.round(size * 0.092);
+  const SPOKES   = 18;
+  const uid      = `z404-${size}`;
 
   return (
-    <div
-      className="card overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)' }}
+    <motion.svg
+      width={size} height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      style={{ opacity: alpha }}
+      animate={spin ? { rotate: 360 } : undefined}
+      transition={spin ? { duration: 10, repeat: Infinity, ease: 'linear' } : undefined}
     >
-      {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-white/[0.06]">
-        <p className="stat-label mb-1">The Machine</p>
-        <h3 className="font-bebas text-3xl text-white tracking-tight leading-none">
-          2018 Giant TCR Advanced Pro 2
-        </h3>
+      <defs>
+        <filter id={`wglow-${uid}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.8" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <radialGradient id={`hubg-${uid}`} cx="50%" cy="50%">
+          <stop offset="0%" stopColor="rgba(251,146,60,0.55)" />
+          <stop offset="100%" stopColor="rgba(251,146,60,0.04)" />
+        </radialGradient>
+      </defs>
+
+      <circle cx={CX} cy={CY} r={outerR}
+        fill="none" stroke="rgba(251,146,60,0.55)" strokeWidth="8"
+        filter={`url(#wglow-${uid})`}
+      />
+      <circle cx={CX} cy={CY} r={deepR}
+        fill="none" stroke="rgba(251,146,60,0.1)" strokeWidth="1.2"
+      />
+      <circle cx={CX} cy={CY} r={spokeBed}
+        fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.8"
+      />
+
+      {Array.from({ length: SPOKES }, (_, i) => {
+        const a0 = (i / SPOKES) * Math.PI * 2;
+        const a1 = a0 + 0.07;
+        return (
+          <line key={i}
+            x1={(CX + hubR * Math.cos(a0)).toFixed(2)}
+            y1={(CY + hubR * Math.sin(a0)).toFixed(2)}
+            x2={(CX + spokeBed * Math.cos(a1)).toFixed(2)}
+            y2={(CY + spokeBed * Math.sin(a1)).toFixed(2)}
+            stroke="rgba(251,146,60,0.22)" strokeWidth="1.1"
+          />
+        );
+      })}
+
+      <circle cx={CX} cy={CY} r={hubR}
+        fill={`url(#hubg-${uid})`}
+        stroke="rgba(251,146,60,0.55)" strokeWidth="2"
+        filter={`url(#wglow-${uid})`}
+      />
+      <circle cx={CX} cy={CY} r={hubR * 0.38} fill="rgba(251,146,60,0.3)" />
+    </motion.svg>
+  );
+}
+
+// ─── Road bike silhouette (side view, simplified geometry) ─────────────────
+function BikeSilhouette() {
+  // Viewbox: 520 × 200. Rear wheel at (110,145), front at (380,145), r=75
+  // BB at (240,145), seat top (210,60), head tube top (355,62)
+  return (
+    <svg
+      viewBox="0 0 520 200"
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden
+      style={{ pointerEvents: 'none' }}
+    >
+      <g fill="none" stroke="rgba(251,146,60,0.09)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {/* Rear wheel */}
+        <circle cx="110" cy="145" r="72" />
+        {/* Front wheel */}
+        <circle cx="385" cy="145" r="72" />
+
+        {/* Frame: chain stay (BB to rear axle) */}
+        <line x1="240" y1="143" x2="110" y2="145" />
+        {/* Frame: seat stay (rear axle to seat tube top junction) */}
+        <line x1="110" y1="145" x2="216" y2="62" />
+        {/* Frame: seat tube */}
+        <line x1="240" y1="143" x2="216" y2="62" />
+        {/* Frame: top tube */}
+        <line x1="216" y1="62" x2="355" y2="65" />
+        {/* Frame: down tube */}
+        <line x1="240" y1="143" x2="355" y2="65" />
+        {/* Fork */}
+        <line x1="355" y1="65" x2="385" y2="145" />
+
+        {/* Seat post */}
+        <line x1="218" y1="62" x2="220" y2="42" />
+        {/* Saddle */}
+        <path d="M 200 42 Q 220 37 240 42" />
+
+        {/* Head tube */}
+        <line x1="355" y1="65" x2="360" y2="82" />
+        {/* Stem */}
+        <line x1="357" y1="68" x2="375" y2="60" />
+        {/* Drop bar – outer drops */}
+        <path d="M 370 58 Q 382 58 385 64 Q 388 72 380 75" />
+        {/* Drop bar – hood side */}
+        <path d="M 370 58 Q 362 58 360 62" />
+
+        {/* Crank arm */}
+        <line x1="240" y1="143" x2="255" y2="162" />
+        <circle cx="240" cy="143" r="5" stroke="rgba(251,146,60,0.14)" />
+      </g>
+    </svg>
+  );
+}
+
+// ─── Spec pill ─────────────────────────────────────────────────────────────
+function SpecPill({ children, glow = false }: { children: React.ReactNode; glow?: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-1 rounded-full border text-[10px] font-medium tracking-wide"
+      style={{
+        borderColor: 'rgba(251,146,60,0.22)',
+        background:  'rgba(251,146,60,0.05)',
+        color:       'rgba(251,146,60,0.72)',
+        boxShadow:   glow ? '0 0 10px rgba(251,146,60,0.12)' : 'none',
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+// ─── Callout line (spec annotation style) ─────────────────────────────────
+function CalloutLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-px" style={{ background: 'rgba(251,146,60,0.3)' }} />
+      <span className="text-[9px] text-slate-700 tracking-wider uppercase">{label}</span>
+      <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.04)' }} />
+      <span className="text-[10px] font-medium" style={{ color: 'rgba(251,146,60,0.65)' }}>{value}</span>
+    </div>
+  );
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function fmtDist(m: number): string {
+  const km = m / 1000;
+  return km >= 10_000
+    ? `${(km / 1000).toFixed(1)}k`
+    : `${Math.round(km).toLocaleString('en-GB')}`;
+}
+
+function fmtLastRide(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7)  return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BIKE CARD
+// ═══════════════════════════════════════════════════════════════════════════
+export default function BikeCard({ allTimeDistM, allTimeRides, lastRideDate }: BikeCardProps) {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  return (
+    <div ref={ref} className="max-w-7xl mx-auto px-6 pb-16">
+      <div className="flex items-center gap-4 mb-6">
+        <h2 className="font-display font-semibold text-white text-lg">Garage</h2>
+        <span className="h-px flex-1 max-w-[60px]" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <span className="text-[10px] text-slate-700 tracking-[0.3em] uppercase">Equipment</span>
       </div>
 
-      {/* Bike illustration */}
-      <div
-        className="px-4 py-6 relative"
-        style={{ background: 'radial-gradient(ellipse at 50% 85%, rgba(251,146,60,0.05) 0%, transparent 65%)' }}
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-2xl overflow-hidden border transition-colors duration-500"
+        style={{ background: '#0b0e18', borderColor: 'rgba(255,255,255,0.06)' }}
+        whileHover={{ borderColor: 'rgba(251,146,60,0.22)' } as any}
       >
-        <svg viewBox="0 0 520 230" width="100%" aria-hidden="true">
+        {/* Carbon-weave texture */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden preserveAspectRatio="none">
           <defs>
-            <filter id="bc-glow">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            {/* Zipp 404 deep section rim gradient */}
-            <radialGradient id="bc-rim-r" cx="50%" cy="50%" r="50%">
-              <stop offset="78%" stopColor={`${O}0)`} />
-              <stop offset="82%" stopColor={`${O}0.18)`} />
-              <stop offset="100%" stopColor={`${O}0)`} />
-            </radialGradient>
+            <pattern id="cweave" x="0" y="0" width="8" height="8"
+              patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="4" height="4" fill="rgba(255,255,255,0.014)" />
+              <rect x="4" y="4" width="4" height="4" fill="rgba(255,255,255,0.014)" />
+            </pattern>
           </defs>
-
-          {/* ── REAR WHEEL (Zipp 404 deep section) ── */}
-          {/* Tire */}
-          <circle cx={RX} cy={AY} r={RW} fill="none" stroke={`${O}0.08)`} strokeWidth={10} />
-          <circle cx={RX} cy={AY} r={RW} fill="none" stroke={`${O}0.25)`} strokeWidth={2} />
-          {/* Deep section rim — inner edge of the 58mm rim */}
-          <circle cx={RX} cy={AY} r={RW - 10} fill="none" stroke={`${O}0.35)`} strokeWidth={8} />
-          <circle cx={RX} cy={AY} r={RW - 10} fill="none" stroke={`${O}0.55)`} strokeWidth={1} />
-          {/* Spoke bed (inner rim) */}
-          <circle cx={RX} cy={AY} r={RW - 18} fill="none" stroke={`${O}0.12)`} strokeWidth={1} />
-          {/* Spokes — 20 spokes, thin */}
-          {Array.from({ length: 20 }, (_, i) => {
-            const a = (i / 20) * Math.PI * 2 + 0.15;
-            return (
-              <line key={i}
-                x1={(RX + 9 * Math.cos(a)).toFixed(1)} y1={(AY + 9 * Math.sin(a)).toFixed(1)}
-                x2={(RX + (RW - 18) * Math.cos(a)).toFixed(1)} y2={(AY + (RW - 18) * Math.sin(a)).toFixed(1)}
-                stroke={`${O}0.14)`} strokeWidth="0.8"
-              />
-            );
-          })}
-          {/* Hub */}
-          <circle cx={RX} cy={AY} r={9} fill={`${O}0.12)`} stroke={`${O}0.4)`} strokeWidth={1.5} />
-          <circle cx={RX} cy={AY} r={4} fill={`${O}0.5)`} />
-
-          {/* ── FRONT WHEEL (Zipp 404 deep section) ── */}
-          <circle cx={FX} cy={AY} r={RW} fill="none" stroke={`${O}0.08)`} strokeWidth={10} />
-          <circle cx={FX} cy={AY} r={RW} fill="none" stroke={`${O}0.25)`} strokeWidth={2} />
-          <circle cx={FX} cy={AY} r={RW - 10} fill="none" stroke={`${O}0.35)`} strokeWidth={8} />
-          <circle cx={FX} cy={AY} r={RW - 10} fill="none" stroke={`${O}0.55)`} strokeWidth={1} />
-          <circle cx={FX} cy={AY} r={RW - 18} fill="none" stroke={`${O}0.12)`} strokeWidth={1} />
-          {Array.from({ length: 20 }, (_, i) => {
-            const a = (i / 20) * Math.PI * 2 + 0.3;
-            return (
-              <line key={i}
-                x1={(FX + 9 * Math.cos(a)).toFixed(1)} y1={(AY + 9 * Math.sin(a)).toFixed(1)}
-                x2={(FX + (RW - 18) * Math.cos(a)).toFixed(1)} y2={(AY + (RW - 18) * Math.sin(a)).toFixed(1)}
-                stroke={`${O}0.14)`} strokeWidth="0.8"
-              />
-            );
-          })}
-          <circle cx={FX} cy={AY} r={9} fill={`${O}0.12)`} stroke={`${O}0.4)`} strokeWidth={1.5} />
-          <circle cx={FX} cy={AY} r={4} fill={`${O}0.5)`} />
-
-          {/* ── DRIVETRAIN ── */}
-          {/* Chainring outer */}
-          <circle cx={BBX} cy={BBY} r={21} fill="none" stroke={`${O}0.3)`} strokeWidth={3} />
-          {/* Chainring inner (spider) */}
-          <circle cx={BBX} cy={BBY} r={13} fill="none" stroke={`${O}0.2)`} strokeWidth={1.5} />
-          {/* Chainring bolts */}
-          {Array.from({ length: 5 }, (_, i) => {
-            const a = (i / 5) * Math.PI * 2;
-            return <circle key={i} cx={(BBX + 17 * Math.cos(a)).toFixed(1)} cy={(BBY + 17 * Math.sin(a)).toFixed(1)} r={1.5} fill={`${O}0.3)`} />;
-          })}
-          {/* Crank arm — pointing down and slightly forward */}
-          <line x1={BBX} y1={BBY} x2={BBX + 12} y2={BBY + 22} stroke={`${O}0.5)`} strokeWidth={4} strokeLinecap="round" />
-          <circle cx={BBX + 12} cy={BBY + 22} r={3} fill={`${O}0.25)`} stroke={`${O}0.4)`} strokeWidth={1} />
-          {/* Left crank (opposite) */}
-          <line x1={BBX} y1={BBY} x2={BBX - 12} y2={BBY - 22} stroke={`${O}0.3)`} strokeWidth={3} strokeLinecap="round" />
-          {/* Chain (simplified line) */}
-          <line x1={BBX + 21} y1={BBY} x2={RX + 9} y2={AY}
-            stroke={`${O}0.15)`} strokeWidth={2} strokeDasharray="3 2" />
-          {/* Rear cassette */}
-          <circle cx={RX} cy={AY} r={9} fill="none" stroke={`${O}0.25)`} strokeWidth={5} />
-
-          {/* ── FRAME (rear triangle) ── */}
-          {/* Chain stay — from rear axle to BB */}
-          <line x1={RX} y1={AY} x2={BBX} y2={BBY}
-            stroke={`${O}0.55)`} strokeWidth={3.5} strokeLinecap="round" />
-          {/* Seat stay — from rear axle up to seat tube top */}
-          <line x1={RX} y1={AY} x2={ST_TOP_X} y2={ST_TOP_Y}
-            stroke={`${O}0.5)`} strokeWidth={2.5} strokeLinecap="round" />
-
-          {/* ── FRAME (main triangle) ── */}
-          {/* Seat tube — nearly vertical, slight forward lean */}
-          <line x1={BBX} y1={BBY} x2={ST_TOP_X} y2={ST_TOP_Y}
-            stroke={`${O}0.7)`} strokeWidth={4.5} strokeLinecap="round" />
-          {/* Top tube — slightly sloped (TCR compact) */}
-          <line x1={ST_TOP_X} y1={ST_TOP_Y} x2={HT_TOP_X} y2={HT_TOP_Y}
-            stroke={`${O}0.65)`} strokeWidth={4} strokeLinecap="round" />
-          {/* Down tube — wide, main structural tube */}
-          <line x1={BBX} y1={BBY} x2={HT_BOT_X} y2={HT_BOT_Y}
-            stroke={`${O}0.7)`} strokeWidth={5} strokeLinecap="round" />
-          {/* Head tube */}
-          <line x1={HT_TOP_X} y1={HT_TOP_Y} x2={HT_BOT_X} y2={HT_BOT_Y}
-            stroke={`${O}0.8)`} strokeWidth={6} strokeLinecap="round" />
-
-          {/* ── FORK ── */}
-          {/* Fork blades — slight forward curve then down to front axle */}
-          <path
-            d={`M ${HT_BOT_X} ${HT_BOT_Y} C ${HT_BOT_X + 4} ${HT_BOT_Y + 22} ${FX + 2} ${AY - 18} ${FX} ${AY}`}
-            fill="none" stroke={`${O}0.55)`} strokeWidth={3} strokeLinecap="round"
-          />
-
-          {/* ── SADDLE + SEAT POST ── */}
-          {/* Seat post — extends above seat tube */}
-          <line x1={ST_TOP_X} y1={ST_TOP_Y} x2={ST_TOP_X - 4} y2={ST_TOP_Y - 25}
-            stroke={`${O}0.45)`} strokeWidth={3} strokeLinecap="round" />
-          {/* Saddle — low-profile road saddle */}
-          <path
-            d={`M ${ST_TOP_X - 22} ${ST_TOP_Y - 27} C ${ST_TOP_X - 14} ${ST_TOP_Y - 31} ${ST_TOP_X + 2} ${ST_TOP_Y - 30} ${ST_TOP_X + 12} ${ST_TOP_Y - 26}`}
-            fill="none" stroke={`${O}0.65)`} strokeWidth={3.5} strokeLinecap="round"
-          />
-          {/* Saddle rail (underneath, thin) */}
-          <line x1={ST_TOP_X - 18} y1={ST_TOP_Y - 25} x2={ST_TOP_X + 10} y2={ST_TOP_Y - 24}
-            stroke={`${O}0.2)`} strokeWidth={1} />
-
-          {/* ── STEM + HANDLEBARS ── */}
-          {/* Stem — rises slightly forward from top of head tube */}
-          <line x1={HT_TOP_X} y1={HT_TOP_Y} x2={HT_TOP_X + 18} y2={HT_TOP_Y - 10}
-            stroke={`${O}0.55)`} strokeWidth={4} strokeLinecap="round" />
-          {/* Handlebar clamp area */}
-          <circle cx={HT_TOP_X + 18} cy={HT_TOP_Y - 10} r={4} fill={`${O}0.25)`} stroke={`${O}0.5)`} strokeWidth={1.5} />
-          {/* Drop bar tops */}
-          <line x1={HT_TOP_X + 8} y1={HT_TOP_Y - 12} x2={HT_TOP_X + 28} y2={HT_TOP_Y - 12}
-            stroke={`${O}0.5)`} strokeWidth={3} strokeLinecap="round" />
-          {/* Right drop — curves down and back (hood + drop) */}
-          <path
-            d={`M ${HT_TOP_X + 28} ${HT_TOP_Y - 12} C ${HT_TOP_X + 32} ${HT_TOP_Y - 12} ${HT_TOP_X + 36} ${HT_TOP_Y - 8} ${HT_TOP_X + 36} ${HT_TOP_Y + 4} C ${HT_TOP_X + 36} ${HT_TOP_Y + 14} ${HT_TOP_X + 30} ${HT_TOP_Y + 18} ${HT_TOP_X + 22} ${HT_TOP_Y + 17}`}
-            fill="none" stroke={`${O}0.5)`} strokeWidth={2.5} strokeLinecap="round"
-          />
-          {/* Left drop */}
-          <path
-            d={`M ${HT_TOP_X + 8} ${HT_TOP_Y - 12} C ${HT_TOP_X + 4} ${HT_TOP_Y - 12} ${HT_TOP_X} ${HT_TOP_Y - 8} ${HT_TOP_X} ${HT_TOP_Y + 4} C ${HT_TOP_X} ${HT_TOP_Y + 14} ${HT_TOP_X + 6} ${HT_TOP_Y + 18} ${HT_TOP_X + 14} ${HT_TOP_Y + 17}`}
-            fill="none" stroke={`${O}0.4)`} strokeWidth={2} strokeLinecap="round"
-          />
-          {/* Brake lever hoods */}
-          <ellipse cx={HT_TOP_X + 32} cy={HT_TOP_Y - 4} rx={4} ry={6}
-            fill={`${O}0.12)`} stroke={`${O}0.3)`} strokeWidth={1} />
-
-          {/* ── GROUND SHADOW ── */}
-          <ellipse cx={258} cy={226} rx={160} ry={6} fill={`${O}0.05)`} />
-
-          {/* ── GLOW BEHIND FRAME (subtle) ── */}
-          <line x1={BBX} y1={BBY} x2={ST_TOP_X} y2={ST_TOP_Y}
-            stroke={`${O}0.15)`} strokeWidth={12} strokeLinecap="round"
-            filter="url(#bc-glow)" />
-          <line x1={BBX} y1={BBY} x2={HT_BOT_X} y2={HT_BOT_Y}
-            stroke={`${O}0.12)`} strokeWidth={14} strokeLinecap="round"
-            filter="url(#bc-glow)" />
+          <rect width="100%" height="100%" fill="url(#cweave)" />
         </svg>
-      </div>
 
-      {/* Spec list */}
-      <div className="px-6 pb-6 divide-y divide-white/[0.05]">
-        {SPECS.map((spec, i) => (
-          <div
-            key={spec.label}
-            className="flex items-start justify-between py-3 cursor-default group"
-            onMouseEnter={() => setHovered(i)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <span className="text-xs text-slate-600 w-20 flex-shrink-0 pt-0.5">{spec.label}</span>
-            <div className="flex-1 text-right">
-              <p className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
-                {spec.value}
-              </p>
-              <p
-                className="text-xs text-slate-600 transition-all duration-300 overflow-hidden"
-                style={{ maxHeight: hovered === i ? '20px' : '0', opacity: hovered === i ? 1 : 0 }}
-              >
-                {spec.detail}
-              </p>
-            </div>
+        {/* Bike silhouette — large background watermark */}
+        <motion.div
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ delay: 0.6, duration: 1.2 }}
+        >
+          <BikeSilhouette />
+        </motion.div>
+
+        {/* Orange ambient glow */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 85% 50%, rgba(251,146,60,0.09) 0%, transparent 50%)' }}
+        />
+
+        {/* Content */}
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10 px-7 py-7 sm:px-10 sm:py-8">
+
+          {/* ── Text block ── */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] text-slate-700 tracking-[0.35em] uppercase mb-2">
+              {BIKE.year} · {BIKE.role} · Primary Machine
+            </p>
+
+            <motion.h2
+              className="font-bebas leading-none tracking-tight"
+              style={{ fontSize: 'clamp(34px, 5.5vw, 60px)' }}
+              initial={{ opacity: 0, x: -18 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span style={{ color: 'rgba(251,146,60,0.88)' }}>{BIKE.make} </span>
+              <span className="text-white">{BIKE.model}</span>
+            </motion.h2>
+
+            {/* Spec pills */}
+            <motion.div
+              className="flex flex-wrap items-center gap-2 mt-4"
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.28 }}
+            >
+              <SpecPill>{BIKE.groupset}</SpecPill>
+              <SpecPill glow>{BIKE.wheels}</SpecPill>
+              <SpecPill>{BIKE.frame} Frame</SpecPill>
+            </motion.div>
+
+            {/* Spec callout lines */}
+            <motion.div
+              className="mt-4 space-y-1.5"
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.38 }}
+            >
+              <CalloutLine label="Drivetrain" value="11-Speed" />
+              <CalloutLine label="Rim depth" value="58mm Carbon" />
+              <CalloutLine label="Frame" value="ALUXX SL-Grade" />
+            </motion.div>
+
+            {/* Stats strip */}
+            <motion.div
+              className="flex items-center gap-5 mt-5 pt-5 border-t border-white/[0.05]"
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.45 }}
+            >
+              <div>
+                <p className="font-bebas text-2xl text-white leading-none">
+                  {fmtDist(allTimeDistM)}
+                  <span className="text-sm font-sans font-normal text-slate-600 ml-0.5">km</span>
+                </p>
+                <p className="text-[9px] text-slate-700 tracking-wider mt-0.5">TOTAL DISTANCE</p>
+              </div>
+
+              <div className="w-px h-8 bg-white/[0.06] flex-shrink-0" />
+
+              <div>
+                <p className="font-bebas text-2xl text-white leading-none">
+                  {allTimeRides.toLocaleString('en-GB')}
+                </p>
+                <p className="text-[9px] text-slate-700 tracking-wider mt-0.5">RIDES</p>
+              </div>
+
+              <div className="w-px h-8 bg-white/[0.06] flex-shrink-0" />
+
+              <div>
+                <p className="font-bebas text-2xl leading-none"
+                  style={{ color: 'rgba(251,146,60,0.82)' }}>
+                  {fmtLastRide(lastRideDate)}
+                </p>
+                <p className="text-[9px] text-slate-700 tracking-wider mt-0.5">LAST RIDDEN</p>
+              </div>
+            </motion.div>
           </div>
-        ))}
-      </div>
+
+          {/* ── Twin-wheel visual ── */}
+          <div className="hidden sm:block flex-shrink-0 relative self-center" style={{ width: 160, height: 160 }}>
+            {/* Ghost rear wheel */}
+            <motion.div
+              className="absolute"
+              style={{ top: 14, left: 24, zIndex: 0 }}
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.5 }}
+            >
+              <ZippWheel size={122} spin={false} alpha={0.15} />
+            </motion.div>
+
+            {/* Front wheel — slow spin */}
+            <motion.div
+              className="absolute inset-0"
+              style={{ zIndex: 1 }}
+              initial={{ opacity: 0, scale: 0.88 }}
+              animate={inView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.2, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <ZippWheel size={160} spin={true} />
+            </motion.div>
+          </div>
+
+        </div>
+      </motion.div>
     </div>
   );
 }

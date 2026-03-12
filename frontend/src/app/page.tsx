@@ -8,6 +8,7 @@ import EverestMountain from '@/components/EverestMountain';
 import WheelSplit from '@/components/WheelSplit';
 import YearHeatmap from '@/components/YearHeatmap';
 import PerformanceSection from '@/components/PerformanceSection';
+import BikeCard from '@/components/BikeCard';
 import FadeIn from '@/components/FadeIn';
 import Link from 'next/link';
 import {
@@ -117,6 +118,13 @@ export default async function HomePage() {
 
       {/* PERFORMANCE */}
       {yearActivities && <PerformanceSection activities={yearActivities.results} stravaFtp={summary.athlete.ftp ?? null} />}
+
+      {/* GARAGE */}
+      <BikeCard
+        allTimeDistM={summary.all_time.total_distance_m}
+        allTimeRides={summary.all_time.total_rides}
+        lastRideDate={activities.results[0]?.start_date}
+      />
 
       {/* BY THE NUMBERS */}
       <FadeIn delay={0.1}>
