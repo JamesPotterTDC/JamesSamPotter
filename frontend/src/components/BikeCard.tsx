@@ -91,58 +91,6 @@ function ZippWheel({ size = 140, spin = true, alpha = 1 }: {
   );
 }
 
-// ─── Road bike silhouette (side view, simplified geometry) ─────────────────
-function BikeSilhouette() {
-  // Viewbox: 520 × 200. Rear wheel at (110,145), front at (380,145), r=75
-  // BB at (240,145), seat top (210,60), head tube top (355,62)
-  return (
-    <svg
-      viewBox="0 0 520 200"
-      preserveAspectRatio="xMidYMid meet"
-      aria-hidden
-      style={{ pointerEvents: 'none' }}
-    >
-      <g fill="none" stroke="rgba(251,146,60,0.09)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        {/* Rear wheel */}
-        <circle cx="110" cy="145" r="72" />
-        {/* Front wheel */}
-        <circle cx="385" cy="145" r="72" />
-
-        {/* Frame: chain stay (BB to rear axle) */}
-        <line x1="240" y1="143" x2="110" y2="145" />
-        {/* Frame: seat stay (rear axle to seat tube top junction) */}
-        <line x1="110" y1="145" x2="216" y2="62" />
-        {/* Frame: seat tube */}
-        <line x1="240" y1="143" x2="216" y2="62" />
-        {/* Frame: top tube */}
-        <line x1="216" y1="62" x2="355" y2="65" />
-        {/* Frame: down tube */}
-        <line x1="240" y1="143" x2="355" y2="65" />
-        {/* Fork */}
-        <line x1="355" y1="65" x2="385" y2="145" />
-
-        {/* Seat post */}
-        <line x1="218" y1="62" x2="220" y2="42" />
-        {/* Saddle */}
-        <path d="M 200 42 Q 220 37 240 42" />
-
-        {/* Head tube */}
-        <line x1="355" y1="65" x2="360" y2="82" />
-        {/* Stem */}
-        <line x1="357" y1="68" x2="375" y2="60" />
-        {/* Drop bar – outer drops */}
-        <path d="M 370 58 Q 382 58 385 64 Q 388 72 380 75" />
-        {/* Drop bar – hood side */}
-        <path d="M 370 58 Q 362 58 360 62" />
-
-        {/* Crank arm */}
-        <line x1="240" y1="143" x2="255" y2="162" />
-        <circle cx="240" cy="143" r="5" stroke="rgba(251,146,60,0.14)" />
-      </g>
-    </svg>
-  );
-}
-
 // ─── Spec pill ─────────────────────────────────────────────────────────────
 function SpecPill({ children, glow = false }: { children: React.ReactNode; glow?: boolean }) {
   return (
@@ -225,16 +173,6 @@ export default function BikeCard({ allTimeDistM, primaryBikeDistM, allTimeRides,
           </defs>
           <rect width="100%" height="100%" fill="url(#cweave)" />
         </svg>
-
-        {/* Bike silhouette — large background watermark */}
-        <motion.div
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.6, duration: 1.2 }}
-        >
-          <BikeSilhouette />
-        </motion.div>
 
         {/* Orange ambient glow */}
         <div className="absolute inset-0 pointer-events-none"

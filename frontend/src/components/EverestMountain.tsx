@@ -50,8 +50,10 @@ export default function EverestMountain({ elevationM }: EverestMountainProps) {
   const [progress, setProgress] = useState(0);
   const rafRef = useRef<number>(0);
 
-  const raw = elevationM / 8848;
+  const EVEREST = 8848;
+  const raw = elevationM / EVEREST;
   const displayPct = Math.min(raw, 1);
+  const timesClimbed = Math.floor(raw);
   const label = everestMultiple(elevationM);
 
   useEffect(() => {
@@ -186,6 +188,19 @@ export default function EverestMountain({ elevationM }: EverestMountainProps) {
         <span className="text-xs text-slate-600 mb-1.5">Everest</span>
       </div>
       <p className="text-xs text-slate-600 mt-1">{Math.round(elevationM).toLocaleString()} m climbed this year</p>
+
+      {timesClimbed >= 1 && (
+        <div className="mt-3 flex items-center gap-2 px-3 py-1.5 rounded-full"
+          style={{ background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)' }}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <polygon points="5,0 6.2,3.8 10,3.8 7,6.2 8.1,10 5,7.6 1.9,10 3,6.2 0,3.8 3.8,3.8"
+              fill="rgba(251,146,60,0.8)" />
+          </svg>
+          <span className="text-[11px] font-medium tracking-wide" style={{ color: 'rgba(251,146,60,0.8)' }}>
+            Climbed Everest {timesClimbed}× this year
+          </span>
+        </div>
+      )}
     </div>
   );
 }
