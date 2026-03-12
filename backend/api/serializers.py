@@ -9,10 +9,10 @@ class ActivityListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
         fields = [
-            'id', 'strava_id', 'name', 'type', 'sport_type', 
+            'id', 'strava_id', 'name', 'type', 'sport_type',
             'start_date', 'trainer', 'distance_m', 'moving_time_s',
-            'total_elevation_gain_m', 'average_watts', 'kilojoules',
-            'average_heartrate'
+            'total_elevation_gain_m', 'average_watts', 'weighted_average_watts',
+            'kilojoules', 'average_heartrate', 'max_heartrate', 'average_cadence',
         ]
 
 
