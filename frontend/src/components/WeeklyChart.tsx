@@ -104,6 +104,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
+          preserveAspectRatio="none"
           style={{ height: 160 }}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setCursor(null)}
