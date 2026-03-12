@@ -8,6 +8,7 @@ interface ActivityMapDarkProps {
   polyline: string;
   revealAnimation?: boolean;
   className?: string;
+  indoor?: boolean;
 }
 
 function decodePolyline(encoded: string): [number, number][] {
@@ -26,9 +27,16 @@ function decodePolyline(encoded: string): [number, number][] {
   return coords;
 }
 
-export default function ActivityMapDark({ polyline, revealAnimation = false, className = '' }: ActivityMapDarkProps) {
+const VIRTUAL_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {},
+  layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#0d1424' } }],
+};
+
+export default function ActivityMapDark({ polyline, revealAnimation = false, className = '', indoor = false }: ActivityMapDarkProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const routeColor = indoor ? '#22d3ee' : '#fb923c';
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -37,14 +45,18 @@ export default function ActivityMapDark({ polyline, revealAnimation = false, cla
 
     const center = coords[Math.floor(coords.length / 2)];
 
+    const style = indoor
+      ? VIRTUAL_STYLE
+      : process.env.NEXT_PUBLIC_STADIA_API_KEY
+        ? `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=${process.env.NEXT_PUBLIC_STADIA_API_KEY}`
+        : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
     mapRef.current = new maplibregl.Map({
       container: containerRef.current,
-      style: process.env.NEXT_PUBLIC_STADIA_API_KEY
-        ? `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=${process.env.NEXT_PUBLIC_STADIA_API_KEY}`
-        : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      style,
       center,
       zoom: 12,
-      interactive: true,
+      interactive: !indoor,
       attributionControl: false,
     });
 
@@ -72,8 +84,8 @@ export default function ActivityMapDark({ polyline, revealAnimation = false, cla
         type: 'line',
         source: 'route',
         paint: {
-          'line-color': '#fb923c',
-          'line-width': 12,
+          'line-color': routeColor,
+          'line-width': indoor ? 8 : 12,
           'line-opacity': 0.15,
           'line-blur': 4,
         },
@@ -85,8 +97,8 @@ export default function ActivityMapDark({ polyline, revealAnimation = false, cla
         type: 'line',
         source: 'route',
         paint: {
-          'line-color': '#fb923c',
-          'line-width': 3,
+          'line-color': routeColor,
+          'line-width': indoor ? 2.5 : 3,
           'line-opacity': 0,
         },
         layout: { 'line-join': 'round', 'line-cap': 'round' },
@@ -127,10 +139,10 @@ export default function ActivityMapDark({ polyline, revealAnimation = false, cla
 
       // Start/end markers
       if (coords.length > 0) {
-        new maplibregl.Marker({ color: '#10b981', scale: 0.7 })
+        new maplibregl.Marker({ color: routeColor, scale: 0.7 })
           .setLngLat(coords[0])
           .addTo(map);
-        new maplibregl.Marker({ color: '#fb923c', scale: 0.7 })
+        new maplibregl.Marker({ color: routeColor, scale: 0.6 })
           .setLngLat(coords[coords.length - 1])
           .addTo(map);
       }

@@ -29,7 +29,7 @@ export default async function ActivityDetailPage({
 }) {
   const activity = await fetchActivity(parseInt(params.id));
   const isIndoor = checkIndoor(activity.trainer, activity.sport_type);
-  const hasMap = !isIndoor && !!activity.map_polyline;
+  const hasMap = !!activity.map_polyline;
   const pints = guinnessPints(activity.kilojoules);
   const accentClass = isIndoor ? 'text-cyan-400' : 'text-orange-400';
   const accentBg = isIndoor
@@ -96,7 +96,7 @@ export default async function ActivityDetailPage({
             style={!hasMap ? { background: 'radial-gradient(ellipse at center, rgba(34,211,238,0.06) 0%, transparent 70%)' } : {}}>
             {hasMap ? (
               <>
-                <ActivityMapDark polyline={activity.map_polyline} revealAnimation className="w-full h-full" />
+                <ActivityMapDark polyline={activity.map_polyline} revealAnimation indoor={isIndoor} className="w-full h-full" />
                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-void to-transparent pointer-events-none" />
               </>
             ) : (

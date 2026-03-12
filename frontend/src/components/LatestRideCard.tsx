@@ -14,7 +14,7 @@ interface LatestRideCardProps {
 
 export default function LatestRideCard({ activity, detail }: LatestRideCardProps) {
   const isIndoor = checkIndoor(activity.trainer, activity.sport_type);
-  const hasMap = !isIndoor && detail?.map_polyline;
+  const hasMap = !!detail?.map_polyline;
 
   return (
     <section className="max-w-7xl mx-auto px-6 pb-16">
@@ -41,7 +41,7 @@ export default function LatestRideCard({ activity, detail }: LatestRideCardProps
             <div className="grid grid-cols-1 lg:grid-cols-3 h-80 lg:h-96">
               {/* Map — takes 2/3 */}
               <div className="lg:col-span-2 relative h-64 lg:h-full">
-                <ActivityMapDark polyline={detail!.map_polyline} />
+                <ActivityMapDark polyline={detail!.map_polyline} indoor={isIndoor} />
                 {/* Gradient overlay on right edge for desktop */}
                 <div className="hidden lg:block absolute right-0 inset-y-0 w-24 bg-gradient-to-l from-[#07090f] to-transparent pointer-events-none z-10" />
               </div>
