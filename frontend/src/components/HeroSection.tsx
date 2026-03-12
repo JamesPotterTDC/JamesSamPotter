@@ -98,9 +98,9 @@ export default function HeroSection({ summary }: HeroSectionProps) {
               element: <AnimatedCounter value={ytd.total_elevation_m} duration={2200} />,
             },
             {
-              label: `${String(totalMins).padStart(2,'0')}m in the saddle`,
+              label: 'in the saddle',
               accent: 'cyan',
-              element: <AnimatedCounter value={totalHours} duration={2000} suffix="h" />,
+              element: <AnimatedCounter value={totalHours} duration={2000} suffix={`h ${String(totalMins).padStart(2,'0')}m`} />,
             },
           ].map((stat, i) => (
             <motion.div

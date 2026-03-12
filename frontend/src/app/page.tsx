@@ -21,7 +21,7 @@ import {
   formatPower,
   everestProgressPercent,
   everestMultiple,
-  rideTypeColor,
+  isIndoor,
 } from '@/lib/utils';
 
 export const revalidate = 0;
@@ -35,11 +35,11 @@ export default async function HomePage() {
       fetchSummary(),
       fetchActivities({ page: 1 }),
       fetchWeeklyTrends(16),
-      fetchActivities({ year: currentYear, page_size: 200 }),
+      fetchActivities({ year: currentYear, page_size: 100 }),
     ]);
 
     // Fetch route detail for latest outdoor ride
-    const latestOutdoor = activities.results.find((a) => !a.trainer);
+    const latestOutdoor = activities.results.find((a) => !isIndoor(a.trainer, a.sport_type));
     if (latestOutdoor) {
       try { latestDetail = await fetchActivity(latestOutdoor.id); } catch {}
     }
@@ -191,7 +191,7 @@ export default async function HomePage() {
                   {/* Type indicator */}
                   <div
                     className={`w-1 self-stretch rounded-full flex-shrink-0 ${
-                      ride.trainer ? 'bg-cyan-400' : 'bg-orange-400'
+                      isIndoor(ride.trainer, ride.sport_type) ? 'bg-cyan-400' : 'bg-orange-400'
                     }`}
                   />
 
@@ -206,7 +206,7 @@ export default async function HomePage() {
                   {/* Stats */}
                   <div className="hidden sm:flex items-center gap-6 text-right">
                     <div>
-                      <p className={`font-bebas text-lg leading-none ${ride.trainer ? 'text-cyan-400' : 'text-orange-400'}`}>
+                      <p className={`font-bebas text-lg leading-none ${isIndoor(ride.trainer, ride.sport_type) ? 'text-cyan-400' : 'text-orange-400'}`}>
                         {formatDistance(ride.distance_m)}
                       </p>
                       <p className="text-xs text-slate-600">dist</p>

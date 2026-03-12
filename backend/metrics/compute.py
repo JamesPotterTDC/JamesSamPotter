@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from django.db.models import Sum, Count, Avg, Max
+from django.db.models import Sum, Count, Avg, Max, Q
 from django.utils import timezone
 from .models import DerivedWeekly, Milestone
 from strava_ingest.models import Activity
@@ -40,8 +40,8 @@ def compute_weekly_metrics(athlete):
             start_date__lt=week_end
         )
         
-        indoor = week_activities.filter(trainer=True)
-        outdoor = week_activities.filter(trainer=False)
+        indoor = week_activities.filter(Q(trainer=True) | Q(type='VirtualRide'))
+        outdoor = week_activities.filter(trainer=False).exclude(type='VirtualRide')
         
         totals = {
             'total_rides': week_activities.count(),

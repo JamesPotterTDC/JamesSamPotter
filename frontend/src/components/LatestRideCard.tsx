@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { formatDistance, formatDuration, formatElevation, formatPace, formatPower, formatDate } from '@/lib/utils';
+import { formatDistance, formatDuration, formatElevation, formatPace, formatPower, formatDate, isIndoor as checkIndoor } from '@/lib/utils';
 import type { ActivityDetail, Activity } from '@/lib/api';
 
 const ActivityMapDark = dynamic(() => import('./ActivityMapDark'), { ssr: false });
@@ -13,7 +13,7 @@ interface LatestRideCardProps {
 }
 
 export default function LatestRideCard({ activity, detail }: LatestRideCardProps) {
-  const isIndoor = activity.trainer;
+  const isIndoor = checkIndoor(activity.trainer, activity.sport_type);
   const hasMap = !isIndoor && detail?.map_polyline;
 
   return (

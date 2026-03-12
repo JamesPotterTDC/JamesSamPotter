@@ -8,6 +8,7 @@ import {
   formatElevation,
   formatDateShort,
   formatPower,
+  isIndoor as checkIndoor,
 } from '@/lib/utils';
 
 interface SearchParams {
@@ -61,7 +62,7 @@ export default async function ActivitiesPage({
         <FadeIn delay={0.15}>
           <div className="space-y-2">
             {data.results.map((activity, i) => {
-              const isIndoor = activity.trainer;
+              const isIndoor = checkIndoor(activity.trainer, activity.sport_type);
               const accent = isIndoor ? 'text-cyan-400' : 'text-orange-400';
               const bar = isIndoor ? 'bg-cyan-400' : 'bg-orange-400';
 

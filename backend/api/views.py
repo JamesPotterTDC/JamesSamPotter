@@ -87,8 +87,8 @@ def summary_view(request):
     year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
     
     def aggregate_period(qs):
-        indoor = qs.filter(trainer=True)
-        outdoor = qs.filter(trainer=False)
+        indoor = qs.filter(Q(trainer=True) | Q(type='VirtualRide'))
+        outdoor = qs.filter(trainer=False).exclude(type='VirtualRide')
         
         return {
             'total_rides': qs.count(),

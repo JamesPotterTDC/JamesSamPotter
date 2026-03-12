@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useInView } from 'framer-motion';
 import type { Activity } from '@/lib/api';
+import { isIndoor } from '@/lib/utils';
 
 interface YearHeatmapProps {
   activities: Activity[];
@@ -32,11 +33,11 @@ function buildDayMap(activities: Activity[]): Map<string, DayData> {
       existing.distance += a.distance_m;
       existing.rides += 1;
       existing.name = `${existing.rides} rides`;
-      if (existing.indoor !== a.trainer) existing.mixed = true;
+      if (existing.indoor !== isIndoor(a.trainer, a.sport_type)) existing.mixed = true;
     } else {
       map.set(key, {
         distance: a.distance_m,
-        indoor: a.trainer,
+        indoor: isIndoor(a.trainer, a.sport_type),
         mixed: false,
         rides: 1,
         name: a.name,

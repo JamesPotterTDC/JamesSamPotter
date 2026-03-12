@@ -88,12 +88,15 @@ export function everestMultiple(elevationM: number | null | undefined): string {
   return `${multiple.toFixed(1)}×`;
 }
 
+export function isIndoor(trainer: boolean, sportType?: string): boolean {
+  return trainer || sportType === 'VirtualRide';
+}
+
 export function rideTypeLabel(trainer: boolean, type: string): string {
-  if (trainer) return "Indoor";
-  if (type === "VirtualRide") return "Virtual";
+  if (isIndoor(trainer, type)) return "Indoor";
   return "Outdoor";
 }
 
-export function rideTypeColor(trainer: boolean): "orange" | "cyan" {
-  return trainer ? "cyan" : "orange";
+export function rideTypeColor(trainer: boolean, sportType?: string): "orange" | "cyan" {
+  return isIndoor(trainer, sportType) ? "cyan" : "orange";
 }

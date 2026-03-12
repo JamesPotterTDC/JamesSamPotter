@@ -15,6 +15,7 @@ import {
   formatDateTime,
   guinnessPints,
   everestMultiple,
+  isIndoor as checkIndoor,
 } from '@/lib/utils';
 
 const ActivityMapDark = dynamic(() => import('@/components/ActivityMapDark'), { ssr: false });
@@ -27,7 +28,7 @@ export default async function ActivityDetailPage({
   params: { id: string };
 }) {
   const activity = await fetchActivity(parseInt(params.id));
-  const isIndoor = activity.trainer;
+  const isIndoor = checkIndoor(activity.trainer, activity.sport_type);
   const hasMap = !isIndoor && !!activity.map_polyline;
   const pints = guinnessPints(activity.kilojoules);
   const accentClass = isIndoor ? 'text-cyan-400' : 'text-orange-400';
