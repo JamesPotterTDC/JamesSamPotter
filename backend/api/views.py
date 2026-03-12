@@ -46,9 +46,12 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         if activity_type:
             queryset = queryset.filter(type=activity_type)
         
-        trainer = self.request.query_params.get('trainer')
-        if trainer is not None:
-            queryset = queryset.filter(trainer=trainer.lower() == 'true')
+        indoor = self.request.query_params.get('indoor')
+        if indoor is not None:
+            if indoor.lower() == 'true':
+                queryset = queryset.filter(Q(trainer=True) | Q(type='VirtualRide'))
+            else:
+                queryset = queryset.filter(trainer=False).exclude(type='VirtualRide')
         
         year = self.request.query_params.get('year')
         if year:

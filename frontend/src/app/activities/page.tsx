@@ -12,7 +12,7 @@ import {
 
 interface SearchParams {
   page?: string;
-  type?: string;
+  filter?: string;
 }
 
 export const revalidate = 0;
@@ -45,9 +45,10 @@ export default async function ActivitiesPage({
   searchParams: SearchParams;
 }) {
   const page = parseInt(searchParams.page || '1');
-  const typeFilter = searchParams.type;
+  const filter = searchParams.filter; // 'outdoor' | 'indoor' | undefined
 
-  const data = await fetchActivities({ page, page_size: 50 });
+  const indoor = filter === 'indoor' ? true : filter === 'outdoor' ? false : undefined;
+  const data = await fetchActivities({ page, page_size: 50, indoor });
   const groups = groupByMonth(data.results);
 
   return (
@@ -70,9 +71,9 @@ export default async function ActivitiesPage({
 
         {/* Filter chips */}
         <div className="flex items-center gap-2 mb-16">
-          <FilterChip href="/activities" active={!typeFilter} label="All" />
-          <FilterChip href="/activities?type=outdoor" active={typeFilter === 'outdoor'} label="Outdoor" color="orange" />
-          <FilterChip href="/activities?type=indoor" active={typeFilter === 'indoor'} label="Indoor" color="cyan" />
+          <FilterChip href="/activities" active={!filter} label="All" />
+          <FilterChip href="/activities?filter=outdoor" active={filter === 'outdoor'} label="Outdoor" color="orange" />
+          <FilterChip href="/activities?filter=indoor" active={filter === 'indoor'} label="Indoor" color="cyan" />
         </div>
 
         {/* Timeline */}
@@ -186,7 +187,7 @@ export default async function ActivitiesPage({
           <div className="mt-16 flex justify-center items-center gap-3">
             {data.previous ? (
               <Link
-                href={`/activities?page=${page - 1}`}
+                href={`/activities?page=${page - 1}${filter ? `&filter=${filter}` : ''}`}
                 className="px-6 py-2.5 rounded-full border border-white/[0.1] text-sm font-medium text-slate-400 hover:text-white hover:border-white/[0.2] transition-all"
               >
                 ← Earlier
@@ -195,7 +196,7 @@ export default async function ActivitiesPage({
             <span className="text-xs text-slate-700 px-4">Page {page}</span>
             {data.next ? (
               <Link
-                href={`/activities?page=${page + 1}`}
+                href={`/activities?page=${page + 1}${filter ? `&filter=${filter}` : ''}`}
                 className="px-6 py-2.5 rounded-full border border-white/[0.1] text-sm font-medium text-slate-400 hover:text-white hover:border-white/[0.2] transition-all"
               >
                 Later →
