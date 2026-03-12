@@ -7,7 +7,7 @@ import GuinnessCard from '@/components/GuinnessCard';
 import EverestMountain from '@/components/EverestMountain';
 import WheelSplit from '@/components/WheelSplit';
 import YearHeatmap from '@/components/YearHeatmap';
-import PowerSection from '@/components/PowerSection';
+import PerformanceSection from '@/components/PerformanceSection';
 import FadeIn from '@/components/FadeIn';
 import Link from 'next/link';
 import {
@@ -115,8 +115,8 @@ export default async function HomePage() {
         </FadeIn>
       )}
 
-      {/* POWER */}
-      {yearActivities && <PowerSection activities={yearActivities.results} />}
+      {/* PERFORMANCE */}
+      {yearActivities && <PerformanceSection activities={yearActivities.results} />}
 
       {/* BY THE NUMBERS */}
       <FadeIn delay={0.1}>
