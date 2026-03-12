@@ -10,10 +10,17 @@ export interface Activity {
   trainer: boolean;
   distance_m: number;
   moving_time_s: number;
+  elapsed_time_s?: number;
   total_elevation_gain_m: number;
+  average_speed_mps?: number;
+  max_speed_mps?: number;
   average_watts?: number;
+  weighted_average_watts?: number;
   kilojoules?: number;
   average_heartrate?: number;
+  max_heartrate?: number;
+  average_cadence?: number;
+  map_polyline?: string;
 }
 
 export interface ActivityDetail extends Activity {
