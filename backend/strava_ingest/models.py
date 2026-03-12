@@ -23,6 +23,7 @@ class StravaAthlete(models.Model):
     username = models.CharField(max_length=255, blank=True, null=True)
     profile = models.URLField(max_length=500, blank=True)
     ftp = models.IntegerField(null=True, blank=True, help_text='FTP in watts from Strava athlete profile')
+    primary_bike_distance_m = models.FloatField(null=True, blank=True, help_text='Total lifetime distance on primary bike from Strava gear data')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

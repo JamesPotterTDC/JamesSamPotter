@@ -85,6 +85,33 @@ def save_activity_from_strava(athlete, activity_data, fetch_streams=None):
         return activity, created
 
 
+def sync_athlete_profile(athlete):
+    """
+    Refresh FTP and primary bike distance from the Strava athlete profile.
+    Safe to call on every sync cycle — only updates changed fields.
+    """
+    client = StravaClient(token_model=athlete.oauth_token)
+    try:
+        profile = client.get_athlete()
+        update_fields = []
+        ftp = profile.get('ftp')
+        if ftp and athlete.ftp != int(ftp):
+            athlete.ftp = int(ftp)
+            update_fields.append('ftp')
+        bikes = profile.get('bikes') or []
+        primary = next((b for b in bikes if b.get('primary')), bikes[0] if bikes else None)
+        if primary and primary.get('distance'):
+            dist = float(primary['distance'])
+            if athlete.primary_bike_distance_m != dist:
+                athlete.primary_bike_distance_m = dist
+                update_fields.append('primary_bike_distance_m')
+        if update_fields:
+            athlete.save(update_fields=update_fields)
+            logger.info(f"Updated athlete profile fields {update_fields} for {athlete.strava_id}")
+    except Exception as e:
+        logger.warning(f"Could not sync athlete profile for {athlete.strava_id}: {e}")
+
+
 def sync_athlete_activities(athlete, days=None, page_limit=10):
     """
     Sync activities for an athlete.

@@ -3,7 +3,7 @@ from celery import shared_task
 from django.db import transaction
 from .models import StravaAthlete, Activity
 from .strava_client import StravaClient
-from .ingest import sync_athlete_activities, save_activity_from_strava
+from .ingest import sync_athlete_activities, save_activity_from_strava, sync_athlete_profile
 from metrics.tasks import compute_metrics_for_athlete
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,9 @@ def incremental_sync(self, athlete_id):
     try:
         athlete = StravaAthlete.objects.get(id=athlete_id)
         logger.info(f"Starting incremental sync for athlete {athlete.strava_id}")
-        
+
+        sync_athlete_profile(athlete)
+
         result = sync_athlete_activities(athlete, days=7, page_limit=5)
         
         compute_metrics_for_athlete.delay(athlete_id)

@@ -122,6 +122,7 @@ export default async function HomePage() {
       {/* GARAGE */}
       <BikeCard
         allTimeDistM={summary.all_time.total_distance_m}
+        primaryBikeDistM={summary.athlete.primary_bike_distance_m ?? null}
         allTimeRides={summary.all_time.total_rides}
         lastRideDate={activities.results[0]?.start_date}
       />

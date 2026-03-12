@@ -49,7 +49,7 @@ def oauth_callback(request):
             }
         )
 
-        # Fetch full athlete profile to capture FTP (not in OAuth summary response)
+        # Fetch full athlete profile to capture FTP and primary bike distance
         try:
             import requests as _req
             resp = _req.get(
@@ -58,13 +58,23 @@ def oauth_callback(request):
                 timeout=10,
             )
             if resp.ok:
-                ftp = resp.json().get('ftp')
+                profile = resp.json()
+                update_fields = []
+                ftp = profile.get('ftp')
                 if ftp:
                     athlete.ftp = int(ftp)
-                    athlete.save(update_fields=['ftp'])
+                    update_fields.append('ftp')
                     logger.info(f"Stored Strava FTP {ftp}W for athlete {athlete.strava_id}")
+                bikes = profile.get('bikes') or []
+                primary = next((b for b in bikes if b.get('primary')), bikes[0] if bikes else None)
+                if primary and primary.get('distance'):
+                    athlete.primary_bike_distance_m = float(primary['distance'])
+                    update_fields.append('primary_bike_distance_m')
+                    logger.info(f"Stored primary bike distance {primary['distance']}m for athlete {athlete.strava_id}")
+                if update_fields:
+                    athlete.save(update_fields=update_fields)
         except Exception as e:
-            logger.warning(f"Could not fetch athlete FTP: {e}")
+            logger.warning(f"Could not fetch athlete profile: {e}")
 
         expires_at = timezone.make_aware(
             datetime.fromtimestamp(token_data['expires_at'])

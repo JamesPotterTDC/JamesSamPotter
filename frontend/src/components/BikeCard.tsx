@@ -16,6 +16,7 @@ const BIKE = {
 
 interface BikeCardProps {
   allTimeDistM: number;
+  primaryBikeDistM?: number | null;
   allTimeRides: number;
   lastRideDate?: string;
 }
@@ -191,7 +192,9 @@ function fmtLastRide(dateStr?: string): string {
 // ═══════════════════════════════════════════════════════════════════════════
 // BIKE CARD
 // ═══════════════════════════════════════════════════════════════════════════
-export default function BikeCard({ allTimeDistM, allTimeRides, lastRideDate }: BikeCardProps) {
+export default function BikeCard({ allTimeDistM, primaryBikeDistM, allTimeRides, lastRideDate }: BikeCardProps) {
+  // Prefer the Strava gear total (true lifetime distance) over the DB aggregate
+  const displayDistM = primaryBikeDistM ?? allTimeDistM;
   const ref    = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
 
@@ -291,10 +294,12 @@ export default function BikeCard({ allTimeDistM, allTimeRides, lastRideDate }: B
             >
               <div>
                 <p className="font-bebas text-2xl text-white leading-none">
-                  {fmtDist(allTimeDistM)}
+                  {fmtDist(displayDistM)}
                   <span className="text-sm font-sans font-normal text-slate-600 ml-0.5">km</span>
                 </p>
-                <p className="text-[9px] text-slate-700 tracking-wider mt-0.5">TOTAL DISTANCE</p>
+                <p className="text-[9px] text-slate-700 tracking-wider mt-0.5">
+                  {primaryBikeDistM ? 'STRAVA TOTAL' : 'TOTAL DISTANCE'}
+                </p>
               </div>
 
               <div className="w-px h-8 bg-white/[0.06] flex-shrink-0" />
