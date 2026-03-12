@@ -38,10 +38,10 @@ export default async function HomePage() {
       fetchActivities({ year: currentYear, page_size: 100 }),
     ]);
 
-    // Fetch route detail for latest outdoor ride
-    const latestOutdoor = activities.results.find((a) => !isIndoor(a.trainer, a.sport_type));
-    if (latestOutdoor) {
-      try { latestDetail = await fetchActivity(latestOutdoor.id); } catch {}
+    // Fetch detail for latest ride (for map polyline if outdoor)
+    const latestRide = activities.results[0];
+    if (latestRide) {
+      try { latestDetail = await fetchActivity(latestRide.id); } catch {}
     }
   } catch {
     return (
