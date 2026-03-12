@@ -1,6 +1,7 @@
 import Nav from '@/components/Nav';
 import FadeIn from '@/components/FadeIn';
 import ElevationProfile from '@/components/ElevationProfile';
+import StreamLandscape from '@/components/StreamLandscape';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { fetchActivity } from '@/lib/api';
@@ -173,6 +174,16 @@ export default async function ActivityDetailPage({
                 color={accentHex}
               />
             </div>
+          </FadeIn>
+        )}
+
+        {/* Stream Landscape */}
+        {activity.streams && (activity.streams.altitude || activity.streams.watts || activity.streams.heartrate) && (
+          <FadeIn delay={0.12}>
+            <StreamLandscape
+              streams={activity.streams}
+              accentHex={accentHex}
+            />
           </FadeIn>
         )}
 

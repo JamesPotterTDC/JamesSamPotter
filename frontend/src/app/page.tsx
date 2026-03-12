@@ -1,5 +1,6 @@
 import Nav from '@/components/Nav';
 import HeroSection from '@/components/HeroSection';
+import YearNarrative from '@/components/YearNarrative';
 import LatestRideCard from '@/components/LatestRideCard';
 import WeeklyChart from '@/components/WeeklyChart';
 import GuinnessCard from '@/components/GuinnessCard';
@@ -73,6 +74,9 @@ export default async function HomePage() {
 
       {/* HERO */}
       <HeroSection summary={summary} />
+
+      {/* YEAR NARRATIVE */}
+      <YearNarrative summary={summary} />
 
       {/* LATEST RIDE */}
       {activities.results[0] && (
