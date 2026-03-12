@@ -1,2 +1,2 @@
-[start]
+[phases.start]
 cmd = "bash start.sh"
