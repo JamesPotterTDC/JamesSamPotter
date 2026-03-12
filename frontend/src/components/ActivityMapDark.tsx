@@ -39,7 +39,9 @@ export default function ActivityMapDark({ polyline, revealAnimation = false, cla
 
     mapRef.current = new maplibregl.Map({
       container: containerRef.current,
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      style: process.env.NEXT_PUBLIC_STADIA_API_KEY
+        ? `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=${process.env.NEXT_PUBLIC_STADIA_API_KEY}`
+        : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
       center,
       zoom: 12,
       interactive: true,
