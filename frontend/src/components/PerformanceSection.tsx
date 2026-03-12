@@ -7,13 +7,13 @@ import { isIndoor } from '@/lib/utils';
 import FadeIn from './FadeIn';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ATHLETE CONFIG — update these for accurate derived metrics
+// ATHLETE CONFIG
 // ═══════════════════════════════════════════════════════════════════════════
-const ATHLETE_AGE = 35;            // used for estimated max HR formula
-const KNOWN_FTP: number | null = null; // set e.g. 275 if you've done a test
+const ATHLETE_AGE = 30;            // used for estimated max HR formula (220 − age)
+const FALLBACK_FTP: number | null = 220; // used only if Strava has no FTP set
 // ═══════════════════════════════════════════════════════════════════════════
 
-interface PerformanceSectionProps { activities: Activity[] }
+interface PerformanceSectionProps { activities: Activity[]; stravaFtp?: number | null }
 
 // ─── HR zone model ─────────────────────────────────────────────────────────
 const ZONES = [
@@ -31,9 +31,10 @@ type FTPResult = {
   date: string | null; confidence: 'tested' | 'estimated' | 'low';
 };
 
-function deriveFTP(acts: Activity[]): FTPResult | null {
-  if (KNOWN_FTP) {
-    return { ftp: KNOWN_FTP, bestNP: KNOWN_FTP, source: 'Tested', date: null, confidence: 'tested' };
+function deriveFTP(acts: Activity[], knownFtp?: number | null): FTPResult | null {
+  const override = knownFtp ?? FALLBACK_FTP;
+  if (override) {
+    return { ftp: override, bestNP: override, source: knownFtp ? 'Strava athlete profile' : 'Manual', date: null, confidence: 'tested' };
   }
   const np = acts.filter(a => (a.weighted_average_watts ?? 0) > 50);
   if (!np.length) return null;
@@ -544,13 +545,13 @@ function CadenceCard({ avgCad, avgIndCad, avgOutCad, cadVals, hasCad }: {
 // ROOT EXPORT
 // ═══════════════════════════════════════════════════════════════════════════
 
-export default function PerformanceSection({ activities }: PerformanceSectionProps) {
+export default function PerformanceSection({ activities, stravaFtp }: PerformanceSectionProps) {
   const hasPower = activities.some(a => a.average_watts || a.weighted_average_watts);
   const hasHR    = activities.some(a => a.average_heartrate);
   const hasCad   = activities.some(a => a.average_cadence);
   if (!hasPower && !hasHR && !hasCad) return null;
 
-  const ftpData  = useMemo(() => deriveFTP(activities), [activities]);
+  const ftpData  = useMemo(() => deriveFTP(activities, stravaFtp), [activities, stravaFtp]);
   const monthly  = useMemo(() => monthlyData(activities), [activities]);
   const efforts  = useMemo(() => bestEfforts(activities), [activities]);
 

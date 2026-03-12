@@ -107,6 +107,7 @@ def summary_view(request):
             'id': athlete.id,
             'name': f"{athlete.firstname} {athlete.lastname}",
             'strava_id': athlete.strava_id,
+            'ftp': athlete.ftp,
         },
         'this_week': aggregate_period(activities.filter(start_date__gte=week_start)),
         'this_month': aggregate_period(activities.filter(start_date__gte=month_start)),

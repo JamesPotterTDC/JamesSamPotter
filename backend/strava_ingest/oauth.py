@@ -48,7 +48,24 @@ def oauth_callback(request):
                 'profile': athlete_data.get('profile', ''),
             }
         )
-        
+
+        # Fetch full athlete profile to capture FTP (not in OAuth summary response)
+        try:
+            import requests as _req
+            resp = _req.get(
+                'https://www.strava.com/api/v3/athlete',
+                headers={'Authorization': f"Bearer {token_data['access_token']}"},
+                timeout=10,
+            )
+            if resp.ok:
+                ftp = resp.json().get('ftp')
+                if ftp:
+                    athlete.ftp = int(ftp)
+                    athlete.save(update_fields=['ftp'])
+                    logger.info(f"Stored Strava FTP {ftp}W for athlete {athlete.strava_id}")
+        except Exception as e:
+            logger.warning(f"Could not fetch athlete FTP: {e}")
+
         expires_at = timezone.make_aware(
             datetime.fromtimestamp(token_data['expires_at'])
         )

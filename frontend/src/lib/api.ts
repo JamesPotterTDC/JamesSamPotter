@@ -69,6 +69,7 @@ export interface Summary {
     id: number;
     name: string;
     strava_id: number;
+    ftp?: number | null;
   };
   this_week: PeriodStats;
   this_month: PeriodStats;

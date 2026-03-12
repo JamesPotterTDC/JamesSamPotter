@@ -116,7 +116,7 @@ export default async function HomePage() {
       )}
 
       {/* PERFORMANCE */}
-      {yearActivities && <PerformanceSection activities={yearActivities.results} />}
+      {yearActivities && <PerformanceSection activities={yearActivities.results} stravaFtp={summary.athlete.ftp ?? null} />}
 
       {/* BY THE NUMBERS */}
       <FadeIn delay={0.1}>

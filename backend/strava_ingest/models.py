@@ -22,6 +22,7 @@ class StravaAthlete(models.Model):
     lastname = models.CharField(max_length=255, blank=True)
     username = models.CharField(max_length=255, blank=True, null=True)
     profile = models.URLField(max_length=500, blank=True)
+    ftp = models.IntegerField(null=True, blank=True, help_text='FTP in watts from Strava athlete profile')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
