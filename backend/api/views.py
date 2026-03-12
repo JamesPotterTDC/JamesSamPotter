@@ -1,6 +1,9 @@
 import logging
 from datetime import datetime, timedelta
 from django.utils import timezone
+
+# Only surface rides from this date onwards across all dashboard views
+DATA_START = timezone.make_aware(datetime(2026, 1, 1))
 from django.db.models import Sum, Count, Q
 from django.conf import settings
 from rest_framework import viewsets, status
@@ -30,7 +33,8 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for activities."""
     
     queryset = Activity.objects.select_related('athlete').prefetch_related('streams').filter(
-        type__in=['Ride', 'VirtualRide', 'EBikeRide']
+        type__in=['Ride', 'VirtualRide', 'EBikeRide'],
+        start_date__gte=DATA_START,
     )
     pagination_class = ActivityPagination
     
@@ -78,7 +82,8 @@ def summary_view(request):
     
     activities = Activity.objects.filter(
         athlete=athlete,
-        type__in=['Ride', 'VirtualRide', 'EBikeRide']
+        type__in=['Ride', 'VirtualRide', 'EBikeRide'],
+        start_date__gte=DATA_START,
     )
     
     now = timezone.now()
@@ -133,7 +138,8 @@ def weekly_trends(request):
     weeks_back = int(request.query_params.get('weeks', 12))
     
     weekly_data = DerivedWeekly.objects.filter(
-        athlete=athlete
+        athlete=athlete,
+        week_start_date__gte=DATA_START,
     ).order_by('-week_start_date')[:weeks_back]
     
     serializer = DerivedWeeklySerializer(weekly_data, many=True)
