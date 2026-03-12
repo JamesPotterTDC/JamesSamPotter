@@ -20,4 +20,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["gunicorn", "cycling_dashboard.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["bash", "start.sh"]
