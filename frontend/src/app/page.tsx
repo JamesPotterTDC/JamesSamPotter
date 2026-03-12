@@ -8,7 +8,6 @@ import EverestMountain from '@/components/EverestMountain';
 import WheelSplit from '@/components/WheelSplit';
 import YearHeatmap from '@/components/YearHeatmap';
 import PowerSection from '@/components/PowerSection';
-import BikeCard from '@/components/BikeCard';
 import FadeIn from '@/components/FadeIn';
 import Link from 'next/link';
 import {
@@ -137,66 +136,56 @@ export default async function HomePage() {
         </section>
       </FadeIn>
 
-      {/* BIKE + RECENT RIDES */}
+      {/* RECENT RIDES */}
       <FadeIn delay={0.1}>
         <section className="max-w-7xl mx-auto px-6 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Bike card */}
-            <div className="lg:col-span-1">
-              <BikeCard />
-            </div>
-
-            {/* Recent rides */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-display font-semibold text-white text-lg">Recent Rides</h2>
-                <Link href="/activities" className="text-xs text-slate-500 hover:text-slate-300 transition-colors tracking-wide">
-                  All rides →
-                </Link>
-              </div>
-              <div className="space-y-2">
-                {recentRides.map((ride) => (
-                  <Link
-                    key={ride.id}
-                    href={`/activities/${ride.id}`}
-                    className="group flex items-center gap-4 card card-hover p-4 rounded-xl"
-                  >
-                    <div
-                      className={`w-1 self-stretch rounded-full flex-shrink-0 ${
-                        isIndoor(ride.trainer, ride.sport_type) ? 'bg-cyan-400' : 'bg-orange-400'
-                      }`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-200 text-sm truncate group-hover:text-white transition-colors">
-                        {ride.name}
-                      </p>
-                      <p className="text-xs text-slate-600 mt-0.5">{formatDateShort(ride.start_date)}</p>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display font-semibold text-white text-lg">Recent Rides</h2>
+            <Link href="/activities" className="text-xs text-slate-500 hover:text-slate-300 transition-colors tracking-wide">
+              All rides →
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {recentRides.map((ride) => (
+              <Link
+                key={ride.id}
+                href={`/activities/${ride.id}`}
+                className="group flex items-center gap-4 card card-hover p-4 rounded-xl"
+              >
+                <div
+                  className={`w-1 self-stretch rounded-full flex-shrink-0 ${
+                    isIndoor(ride.trainer, ride.sport_type) ? 'bg-cyan-400' : 'bg-orange-400'
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-slate-200 text-sm truncate group-hover:text-white transition-colors">
+                    {ride.name}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-0.5">{formatDateShort(ride.start_date)}</p>
+                </div>
+                <div className="hidden sm:flex items-center gap-6 text-right">
+                  <div>
+                    <p className={`font-bebas text-lg leading-none ${isIndoor(ride.trainer, ride.sport_type) ? 'text-cyan-400' : 'text-orange-400'}`}>
+                      {formatDistance(ride.distance_m)}
+                    </p>
+                    <p className="text-xs text-slate-600">dist</p>
+                  </div>
+                  <div>
+                    <p className="font-bebas text-lg text-slate-400 leading-none">{formatDuration(ride.moving_time_s)}</p>
+                    <p className="text-xs text-slate-600">time</p>
+                  </div>
+                  {ride.average_watts && (
+                    <div>
+                      <p className="font-bebas text-lg text-slate-400 leading-none">{formatPower(ride.average_watts)}</p>
+                      <p className="text-xs text-slate-600">power</p>
                     </div>
-                    <div className="hidden sm:flex items-center gap-6 text-right">
-                      <div>
-                        <p className={`font-bebas text-lg leading-none ${isIndoor(ride.trainer, ride.sport_type) ? 'text-cyan-400' : 'text-orange-400'}`}>
-                          {formatDistance(ride.distance_m)}
-                        </p>
-                        <p className="text-xs text-slate-600">dist</p>
-                      </div>
-                      <div>
-                        <p className="font-bebas text-lg text-slate-400 leading-none">{formatDuration(ride.moving_time_s)}</p>
-                        <p className="text-xs text-slate-600">time</p>
-                      </div>
-                      {ride.average_watts && (
-                        <div>
-                          <p className="font-bebas text-lg text-slate-400 leading-none">{formatPower(ride.average_watts)}</p>
-                          <p className="text-xs text-slate-600">power</p>
-                        </div>
-                      )}
-                    </div>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-slate-700 group-hover:text-slate-400 transition-colors flex-shrink-0">
-                      <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </Link>
-                ))}
-              </div>
-            </div>
+                  )}
+                </div>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-slate-700 group-hover:text-slate-400 transition-colors flex-shrink-0">
+                  <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+            ))}
           </div>
         </section>
       </FadeIn>
