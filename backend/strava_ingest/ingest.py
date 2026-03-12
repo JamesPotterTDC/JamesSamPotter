@@ -38,9 +38,7 @@ def save_activity_from_strava(athlete, activity_data, fetch_streams=None):
                 'name': activity_data.get('name', ''),
                 'type': activity_data.get('type', ''),
                 'sport_type': activity_data.get('sport_type', ''),
-                'start_date': timezone.make_aware(
-                    datetime.fromisoformat(activity_data['start_date'].replace('Z', '+00:00'))
-                ),
+                'start_date': datetime.fromisoformat(activity_data['start_date'].replace('Z', '+00:00')),
                 'timezone': activity_data.get('timezone', ''),
                 'trainer': activity_data.get('trainer', False),
                 'commute': activity_data.get('commute', False),
