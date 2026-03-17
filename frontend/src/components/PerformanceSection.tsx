@@ -224,29 +224,31 @@ function ReactorRings({ zones, achievedMax, estimatedMax }: {
   const svgRef = useRef<SVGSVGElement>(null);
   const inView = useInView(svgRef as React.RefObject<Element>, { once: true });
 
-  const SIZE = 176; const CX = 88; const CY = 88;
+  const SIZE = 148; const CX = 74; const CY = 74;
   // zones[0]=Z5 (innermost), zones[4]=Z1 (outermost)
+  // Radii scaled by 148/176 ≈ 0.84 from original
   const ringDefs = [
-    { R: 22, sw: 6 },
-    { R: 33, sw: 6 },
-    { R: 44, sw: 5 },
-    { R: 55, sw: 5 },
-    { R: 66, sw: 4 },
+    { R: 19, sw: 5 },
+    { R: 28, sw: 5 },
+    { R: 37, sw: 4 },
+    { R: 46, sw: 4 },
+    { R: 56, sw: 3 },
   ];
 
   return (
-    <svg ref={svgRef} width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+    <svg ref={svgRef} width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}
+      style={{ overflow: 'hidden', flexShrink: 0 }}>
       <defs>
         {zones.map((z) => (
-          <filter key={z.key} id={`rr-${z.key}`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="2.5" result="b" />
+          <filter key={z.key} id={`rr-${z.key}`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         ))}
       </defs>
 
       {/* Outer marker ring (estimated max boundary) */}
-      <circle cx={CX} cy={CY} r={74} fill="none"
+      <circle cx={CX} cy={CY} r={62} fill="none"
         stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="2 5" />
 
       {/* Zone rings */}
@@ -629,7 +631,7 @@ function HeartRateCard({ estimatedMax, achievedMax, avgHR, zones, hasHR }: {
 
   return (
     <motion.div
-      className="card flex flex-col p-5 gap-3"
+      className="card flex flex-col p-5 gap-3 overflow-hidden"
       style={{ minHeight: 280 }}
       whileHover={{ borderColor: 'rgba(244,63,94,0.15)' } as any}
       transition={{ duration: 0.2 }}
