@@ -119,7 +119,7 @@ export default function SettingsPage() {
               />
             </div>
             <p className="text-slate-600 text-xs mt-1.5">
-              3–50 characters, lowercase letters, numbers, hyphens and underscores only.
+              3 to 50 characters, lowercase letters, numbers, hyphens and underscores only.
             </p>
           </div>
 

@@ -47,7 +47,7 @@ export default function Nav() {
           href={isAuthenticated ? '/dashboard' : '/'}
           className="font-bebas text-xl tracking-[0.18em] text-white/90 hover:text-white transition-colors"
         >
-          VELO
+          PEAKLOG
         </Link>
 
         {/* Centre links — only when authenticated */}

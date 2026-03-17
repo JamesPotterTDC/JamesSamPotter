@@ -28,8 +28,8 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const ACCESS_TOKEN_KEY = 'velo_access';
-const USER_KEY = 'velo_user';
+const ACCESS_TOKEN_KEY = 'peaklog_access';
+const USER_KEY = 'peaklog_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({

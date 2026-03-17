@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export async function POST(request: NextRequest) {
-  const refreshToken = request.cookies.get('velo_refresh')?.value;
+  const refreshToken = request.cookies.get('peaklog_refresh')?.value;
 
   if (!refreshToken) {
     return NextResponse.json({ error: 'No refresh token' }, { status: 401 });
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     if (!res.ok) {
       const response = NextResponse.json({ error: 'Token refresh failed' }, { status: 401 });
-      response.cookies.delete('velo_refresh');
+      response.cookies.delete('peaklog_refresh');
       return response;
     }
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // simplejwt ROTATE_REFRESH_TOKENS is on — store the new refresh token
     if (data.refresh) {
-      response.cookies.set('velo_refresh', data.refresh, {
+      response.cookies.set('peaklog_refresh', data.refresh, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

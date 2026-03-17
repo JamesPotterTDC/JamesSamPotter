@@ -35,15 +35,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-void flex flex-col items-center justify-center px-6">
       {/* Logo / wordmark */}
-      <p className="font-bebas text-3xl tracking-[0.2em] text-white mb-2">VELO</p>
-      <p className="text-slate-600 text-xs tracking-widest uppercase mb-12">Cycling Dashboard</p>
+      <p className="font-bebas text-3xl tracking-[0.2em] text-white mb-2">PEAKLOG</p>
+      <p className="text-slate-600 text-xs tracking-widest uppercase mb-12">Sport Performance Dashboard</p>
 
       {/* Hero */}
       <h1 className="font-display font-semibold text-2xl sm:text-3xl text-white text-center mb-3 max-w-md">
         Your rides. Your data. Your dashboard.
       </h1>
       <p className="text-slate-500 text-sm text-center mb-10 max-w-sm leading-relaxed">
-        Connect your Strava account and get a beautiful, shareable cycling dashboard — completely free.
+        Connect your Strava account and get a beautiful, shareable sport performance dashboard. Completely free.
       </p>
 
       {/* CTA */}

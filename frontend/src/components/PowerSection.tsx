@@ -134,7 +134,7 @@ export default function PowerSection({ activities }: PowerSectionProps) {
                 <span className="text-slate-500 text-sm mb-1.5">W</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Estimated from best normalised power over 45–75 min efforts. Functional Threshold Power.
+                Estimated from best normalised power over 45 to 75 min efforts. Functional Threshold Power.
               </p>
               {avgPower > 0 && ftp > 0 && (
                 <div className="mt-4 pt-4 border-t border-white/[0.06]">

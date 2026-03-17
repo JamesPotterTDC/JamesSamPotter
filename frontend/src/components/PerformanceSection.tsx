@@ -770,7 +770,7 @@ function CadenceCard({ avgCad, avgIndCad, avgOutCad, cadVals, hasCad }: {
           <div className="space-y-1">
             <div className="flex justify-between text-[10px]">
               <span className="text-slate-700">Road cadence band</span>
-              <span className="text-slate-600">{typical.min}–{typical.max} rpm</span>
+              <span className="text-slate-600">{typical.min} to {typical.max} rpm</span>
             </div>
             <AnimBar pct={cadPct} color="linear-gradient(90deg,rgba(34,211,238,0.4),#22d3ee)" height="h-1.5" />
           </div>

@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set('velo_refresh', refresh, {
+  response.cookies.set('peaklog_refresh', refresh, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

@@ -25,17 +25,17 @@ export function formatElevation(meters: number | null | undefined): string {
 }
 
 export function formatPace(mps: number | null | undefined): string {
-  if (!mps) return "—";
+  if (!mps) return "n/a";
   return `${(mps * 3.6).toFixed(1)} km/h`;
 }
 
 export function formatPower(watts: number | null | undefined): string {
-  if (!watts) return "—";
+  if (!watts) return "n/a";
   return `${Math.round(watts)}W`;
 }
 
 export function formatHeartrate(bpm: number | null | undefined): string {
-  if (!bpm) return "—";
+  if (!bpm) return "n/a";
   return `${Math.round(bpm)} bpm`;
 }
 

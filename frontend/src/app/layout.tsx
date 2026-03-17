@@ -23,15 +23,15 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Velo — Cycling Dashboard",
-  description: "Your rides. Your data. Your dashboard. A free, shareable cycling dashboard powered by Strava.",
+  title: "Peaklog | Sport Performance Dashboard",
+  description: "Your rides. Your data. Your dashboard. A free, shareable sport performance dashboard powered by Strava.",
   icons: {
     icon: '/logo.jpg',
     apple: '/logo.jpg',
   },
   openGraph: {
-    title: 'Velo — Cycling Dashboard',
-    description: 'Your rides. Your data. Your dashboard. A free, shareable cycling dashboard powered by Strava.',
+    title: 'Peaklog | Sport Performance Dashboard',
+    description: 'Your rides. Your data. Your dashboard. A free, shareable sport performance dashboard powered by Strava.',
     type: 'website',
   },
 };
