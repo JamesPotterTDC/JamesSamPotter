@@ -68,9 +68,11 @@ export interface Summary {
   athlete: {
     id: number;
     name: string;
+    username?: string;
     strava_id: number;
     ftp?: number | null;
     primary_bike_distance_m?: number | null;
+    avatar_url?: string | null;
   };
   this_week: PeriodStats;
   this_month: PeriodStats;

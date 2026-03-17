@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, Bebas_Neue } from "next/font/google";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -22,15 +23,15 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "James Potter — Cyclist",
-  description: "Personal cycling performance dashboard. Every ride, every watt, every kilometre.",
+  title: "Velo — Cycling Dashboard",
+  description: "Your rides. Your data. Your dashboard. A free, shareable cycling dashboard powered by Strava.",
   icons: {
     icon: '/logo.jpg',
     apple: '/logo.jpg',
   },
   openGraph: {
-    title: 'James Potter — Cyclist',
-    description: 'Personal cycling performance dashboard. Every ride, every watt, every kilometre.',
+    title: 'Velo — Cycling Dashboard',
+    description: 'Your rides. Your data. Your dashboard. A free, shareable cycling dashboard powered by Strava.',
     type: 'website',
   },
 };
@@ -43,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${bebasNeue.variable}`}>
       <body className="antialiased bg-void font-sans">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
